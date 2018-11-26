@@ -113,13 +113,13 @@ def script_pca():
 
 def main():
 
-    script_pca()
+    # script_pca()
 
-    return
+    # return
 
     dir_data = '../data'
     out_dir = '../experiments'
-    out_dir = os.path.join(out_dir,'lda_film_data_12')
+    out_dir = os.path.join(out_dir,'lda_film_data_12_withLabels')
     util.mkdir(out_dir)
 
     file_data = os.path.join(dir_data,'Film_data_.csv')
@@ -133,12 +133,19 @@ def main():
     pain = np.array([1,2,4,5,11,12])
     bin_pain = np.in1d(key_arr, pain)
     bin_no_pain = np.in1d(key_arr, no_pain)
+
+
+    label_pain = [str(val) for val in np.array(key_arr)[bin_pain]]
+    label_no_pain = [str(val) for val in np.array(key_arr)[bin_no_pain]]
+
+    
     class_pain = np.zeros(bin_pain.shape)
     class_pain[bin_pain] = 1
     class_pain = class_pain.astype(int)+1
 
-    
-    for data_type in [ 'frequency','duration','both', 'both_normalized', 'duration_normalized']:
+    # data_types = [ 'frequency','duration','both', 'both_normalized', 'duration_normalized']
+    data_types = [ 'duration_normalized']
+    for data_type in data_types:
         if data_type == 'frequency':
             all_counts = make_data_mat_frequency(data_dict, all_aus, key_arr)
         elif data_type =='duration':
@@ -166,6 +173,7 @@ def main():
         scaler = sklearn.preprocessing.StandardScaler()
         scaler.fit(all_counts)
         data_pca = scaler.transform(all_counts)
+        
         # scaler = sklearn.preprocessing.Normalizer()
         # scaler.fit(data_pca)
         # data_pca = scaler.transform(data_pca)
@@ -204,7 +212,7 @@ def main():
         data_plot = []
         for bin_curr in [bin_pain, bin_no_pain]:
             data_plot.append((data_pca[bin_curr,0],data_pca[bin_curr,1]))
-        visualize.plotSimple(data_plot,title = title, xlabel = x_label, ylabel = y_label, out_file = out_file, noline = True, legend_entries = legend_entries)    
+        visualize.plotSimple(data_plot,title = title, xlabel = x_label, ylabel = y_label, out_file = out_file, noline = True, legend_entries = legend_entries, mark_labels = [label_pain, label_no_pain])    
         # break
     visualize.writeHTMLForFolder(out_dir)
 
