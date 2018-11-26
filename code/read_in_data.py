@@ -33,10 +33,8 @@ def read_anno_file(file_name):
             len_time  = facs_list.index('nan')
             time_list = [float(val.replace(',','.')) for val in time_list[1:len_time]]
             facs_list = facs_list[1:len_time]
-            print vid_number
-
             data_dict[vid_number] = [facs_list, time_list]
-    raw_input()
+    
     return data_dict
 
 def clean_data(data_dict, remove_lr = True):
