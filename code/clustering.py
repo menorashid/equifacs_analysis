@@ -55,29 +55,8 @@ def script_pca():
 
     
     for data_type in ['frequency', 'duration', 'both', 'both_normalized','duration_normalized']:
-        if data_type == 'frequency':
-            all_counts = make_data_mat_frequency(data_dict, all_aus, key_arr)
-        elif data_type =='duration':
-            all_counts = make_data_mat_duration(data_dict, all_aus, key_arr)
-        elif data_type =='both_normalized':
-            all_counts = make_data_mat_frequency(data_dict, all_aus, key_arr)
-            all_counts_d = make_data_mat_duration(data_dict, all_aus, key_arr)
-            div_d = all_counts
-            div_d[div_d==0]=1
-            all_counts_d = all_counts_d/div_d
-            all_counts = np.concatenate([all_counts, all_counts_d], axis = 1)
-        elif data_type == 'duration_normalized':
-            all_counts = make_data_mat_frequency(data_dict, all_aus, key_arr)
-            all_counts_d = make_data_mat_duration(data_dict, all_aus, key_arr)
-            div_d = all_counts
-            div_d[div_d==0]=1
-            all_counts = all_counts_d/div_d
-        elif data_type =='both':           
-            all_counts = make_data_mat_frequency(data_dict, all_aus, key_arr)
-            all_counts_d = make_data_mat_duration(data_dict, all_aus, key_arr)
-            all_counts = np.concatenate([all_counts, all_counts_d], axis = 1)
-        else:
-            raise ValueError('data_type '+str(data_type)+' no valid')
+        
+        all_counts = get_data_by_type(data_dict, all_aus, key_arr, data_type)
 
         scaler = sklearn.preprocessing.StandardScaler()
         scaler.fit(all_counts)
@@ -110,8 +89,6 @@ def script_pca():
 
     visualize.writeHTMLForFolder(out_dir)
     
-
-
 def get_data_by_type(data_dict, all_aus, key_arr, data_type):
     if data_type == 'frequency':
         all_counts = make_data_mat_frequency(data_dict, all_aus, key_arr)
@@ -143,7 +120,10 @@ def get_data_by_type(data_dict, all_aus, key_arr, data_type):
 def script_lda():
     dir_data = '../data'
     out_dir = '../experiments'
-    out_dir = os.path.join(out_dir,'lda_film_data_12_withLabels')
+    norm = 'l2'
+    # norm = 'mean'
+    # norm = 'mean_std'
+    out_dir = os.path.join(out_dir,'lda_film_data_12_withLabels_'+norm)
     util.mkdir(out_dir)
 
     file_data = os.path.join(dir_data,'Film_data_.csv')
@@ -165,62 +145,119 @@ def script_lda():
     
     class_pain = np.zeros(bin_pain.shape)
     class_pain[bin_pain] = 1
-    class_pain = class_pain.astype(int)+1
-
-    data_types = [ 'frequency','duration','both', 'both_normalized', 'duration_normalized']
-    # data_types = [ 'duration_normalized']
+    class_pain = class_pain.astype(int)
+    
+    data_types = ['frequency', 'duration', 'both', 'both_normalized','duration_normalized']
+    
     for data_type in data_types:
         
-
-        scaler = sklearn.preprocessing.StandardScaler()
+        all_counts = get_data_by_type(data_dict, all_aus, key_arr, data_type)
+        
+        if norm =='l2':
+            scaler = sklearn.preprocessing.Normalizer()
+        elif norm=='mean':
+            scaler = sklearn.preprocessing.StandardScaler(with_std = False)
+        else:
+            scaler = sklearn.preprocessing.StandardScaler()
+        
         scaler.fit(all_counts)
         data_pca = scaler.transform(all_counts)
         
-        # scaler = sklearn.preprocessing.Normalizer()
-        # scaler.fit(data_pca)
-        # data_pca = scaler.transform(data_pca)
-
         pca = sklearn.discriminant_analysis.LinearDiscriminantAnalysis()
         pca.fit(data_pca, class_pain)
+        score =pca.score(data_pca,class_pain) 
+        preds = pca.predict_proba(data_pca) 
+        weight = pca.coef_[0]
+    
+        print data_type, score
         
-        print pca.score(data_pca,class_pain)
         
-        data_pca = pca.predict_proba(data_pca) 
-        # data_pca = np.concatenate([data_pca, data_pca],axis = 1)
-        # print data_pca.shape
-        
-        variance = pca.explained_variance_ratio_
-        print 'variance',variance
-        print 'pca.coef_',pca.coef_
-        print 'pca.intercept_',pca.intercept_
-
-        # first_two = data_pca[:,:2]
         x_label = 'Probability No Pain'
         y_label = 'Probability Pain'
-        
-        print data_type
-        print x_label
-        print y_label
-
-        # file_str = data_type
-        # title = ' '.join([val.title() for val in file_str.split('_')])
-        # out_file = os.path.join(out_dir,file_str+'.jpg')
-        # visualize.plotSimple([(data_pca[:,0],data_pca[:,1])],title = title, xlabel = x_label, ylabel = y_label, out_file = out_file, noline = True)
 
         file_str = data_type+'_pain_no_pain'
-        title = ' '.join([val.title() for val in file_str.split('_')])
+        title = ' '.join([val.title() for val in file_str.split('_')]+['%.2f' % score])
         out_file = os.path.join(out_dir,file_str+'.jpg')
         legend_entries = ['Pain','No Pain']
         data_plot = []
         for bin_curr in [bin_pain, bin_no_pain]:
-            data_plot.append((data_pca[bin_curr,0],data_pca[bin_curr,1]))
-        visualize.plotSimple(data_plot,title = title, xlabel = x_label, ylabel = y_label, out_file = out_file, noline = True, legend_entries = legend_entries, mark_labels = [label_pain, label_no_pain])    
+            data_plot.append((preds[bin_curr,0],preds[bin_curr,1]))
+        visualize.plotSimple(data_plot,title = title, xlabel = x_label, ylabel = y_label, out_file = out_file, noline = True, legend_entries = legend_entries, mark_labels = [label_pain, label_no_pain])  
+
+        out_dir_analysis = os.path.join(out_dir,data_type+'_weight_analysis')
+        util.mkdir(out_dir_analysis)
+        if 'both' in data_type:
+            all_aus_curr = [val+' f' for val in all_aus]+[val+' d' for val in all_aus]
+        else:
+            all_aus_curr = all_aus
+
+        do_weight_analysis(out_dir_analysis, data_pca, bin_pain, preds, weight, range(1,13), all_aus_curr)
+
         # break
     visualize.writeHTMLForFolder(out_dir)
 
-def main():
 
-    # script_pca()
+def do_weight_analysis(out_dir, data_pca, bin_pain, preds, weight_ac, horse_nums, all_aus ):
+    # score = pca.score(data_pca,class_pain)
+    # preds = pca.predict_proba(data_pca) 
+    # weight = pca.coef_
+    # bias = pca.intercept_
+    # weight = weight[0]
+    # print 'bias',bias
+    
+    avg_val = np.mean(data_pca, axis = 0)
+    weight_rw = avg_val*weight_ac
+    # print avg_val.shape, weight_ac.shape, weight_rw.shape
+    # weight_rw = np.abs(weight_rw)
+    for pre_str, weight in zip(['','RW '],[weight_ac, weight_rw]):
+        pos_bin = weight>0
+        neg_bin = weight<=0
+        for idx_pos, bin_curr in enumerate([pos_bin, neg_bin]):
+            pos_au = np.array(all_aus)[bin_curr]
+            pos_val = np.abs(weight[bin_curr])
+            pos_val = pos_val/np.sum(pos_val)
+            
+            idx_sort = np.argsort(pos_val)[::-1]
+            pos_au = pos_au[idx_sort]
+            pos_val = pos_val[idx_sort]
+            ylabel = 'Percentage'
+            xtick_labels = pos_au
+            
+            if idx_pos==0:
+                title = pre_str+'Positive Pain Correlation'
+                colors = ['b']
+                dict_vals = {'Pos':pos_val}
+                legend_vals = ['Pos']
+
+            else:
+                title = pre_str+'Negative Pain Correlation'
+                colors = ['r']
+                dict_vals = {'Neg':pos_val}
+                legend_vals = ['Neg']
+
+
+            out_file_str = '_'.join([val.lower() for val in title.split(' ')])
+            out_file = os.path.join(out_dir,out_file_str+'.jpg')
+            visualize.plotGroupBar(out_file ,dict_vals,xtick_labels,legend_vals,colors,xlabel='',ylabel = ylabel,title=title,width=1,ylim=None,loc=None) 
+
+    weight = weight_ac
+    for horse_num in horse_nums:
+        twelve_val = data_pca[horse_num-1,:]
+
+
+
+        dict_vals = {'Weight':weight/np.linalg.norm(weight),'Horse '+str(horse_num):twelve_val/np.linalg.norm(twelve_val)}
+        legend_vals = ['Weight','Horse '+str(horse_num)]
+        colors = ['b','r']
+        ylabel = 'Weight'
+        title = 'GT %d Pred %.2f' % (int(bin_pain[horse_num-1]),preds[horse_num-1,1])
+
+        out_file = os.path.join(out_dir, 'weight_vs_'+str(horse_num)+'.jpg')
+        xtick_labels = all_aus
+        visualize.plotGroupBar(out_file ,dict_vals,xtick_labels,legend_vals,colors,xlabel='',ylabel = ylabel,title=title,width=0.4,ylim=None,loc=None)
+       
+
+def script_comparing_features():
     dir_data = '../data'
     out_dir = '../experiments'
     out_dir = os.path.join(out_dir,'lda_film_data_12_weight_analysis')
@@ -250,88 +287,32 @@ def main():
 
     data_type = 'duration'
     
+    # print 'bias',bias
+    
     all_counts = get_data_by_type(data_dict, all_aus, key_arr, data_type)
     
-    scaler = sklearn.preprocessing.StandardScaler()
-    scaler.fit(all_counts)
-    data_pca = scaler.transform(all_counts)
-    # data_pca = data_pca/np.linalg.norm(data_pca,keepdims = True)
-    # data_pca = all_counts
-    pca = sklearn.discriminant_analysis.LinearDiscriminantAnalysis()
-    pca.fit(data_pca, class_pain)
-    
-    score = pca.score(data_pca,class_pain)
-    preds = pca.predict_proba(data_pca) 
-    weight = pca.coef_
-    bias = pca.intercept_
-    weight = weight[0]
+    data_type = 'duration_normalized'
 
-    pos_bin = weight>0
-    neg_bin = weight<=0
+    all_counts_dn = get_data_by_type(data_dict, all_aus, key_arr, data_type)
 
-    for idx_pos, bin_curr in enumerate([pos_bin, neg_bin]):
-        pos_au = np.array(all_aus)[bin_curr]
-        pos_val = weight[bin_curr]
-        pos_val = pos_val/np.sum(pos_val)
-        
-        idx_sort = np.argsort(pos_val)[::-1]
-        pos_au = pos_au[idx_sort]
-        pos_val = pos_val[idx_sort]
-        ylabel = 'Percentage'
-        xtick_labels = pos_au
-        
-        if idx_pos==0:
-            title = 'Positive Pain Correlation'
-            colors = ['b']
-            dict_vals = {'Pos':pos_val}
-            legend_vals = ['Pos']
+    for horse_num in [12]:
+        twelve_val = all_counts_dn[horse_num-1,:]
+        weight = all_counts[horse_num-1,:]
 
-        else:
-            title = 'Negative Pain Correlation'
-            colors = ['r']
-            dict_vals = {'Neg':pos_val}
-            legend_vals = ['Neg']
-
-
-        out_file_str = '_'.join([val.lower() for val in [data_type]+title.split(' ')])
-        out_file = os.path.join(out_dir,out_file_str+'.jpg')
-        visualize.plotGroupBar(out_file ,dict_vals,xtick_labels,legend_vals,colors,xlabel='',ylabel = ylabel,title=title,width=1,ylim=None,loc=None) 
-
-
-    # neg_bin = 
-    return
-
-
-    print 'bias',bias
-
-    x_label = 'Probability No Pain'
-    y_label = 'Probability Pain'
-    
-    file_str = data_type+'_pain_no_pain'
-    title = ' '.join([val.title() for val in file_str.split('_')]+['%.2f' % score])
-    out_file = os.path.join(out_dir,file_str+'.jpg')
-    legend_entries = ['Pain','No Pain']
-    data_plot = []
-    for bin_curr in [bin_pain, bin_no_pain]:
-        data_plot.append((preds[bin_curr,0],preds[bin_curr,1]))
-    visualize.plotSimple(data_plot,title = title, xlabel = x_label, ylabel = y_label, out_file = out_file, noline = True, legend_entries = legend_entries, mark_labels = [label_pain, label_no_pain])    
-    
-    
-    for horse_num in range(1,13):
-        twelve_val = data_pca[horse_num-1,:]
-
-
-        dict_vals = {'Weight':weight/np.linalg.norm(weight),'Horse '+str(horse_num):twelve_val/np.linalg.norm(twelve_val)}
-        legend_vals = ['Weight','Horse '+str(horse_num)]
+        dict_vals = {'Duration':weight/np.linalg.norm(weight),'Duration Normalized':twelve_val/np.linalg.norm(twelve_val)}
+        legend_vals = ['Duration','Duration Normalized']
         colors = ['b','r']
-        ylabel = 'Weight'
-        title = 'GT %d Pred %.2f' % (int(bin_pain[horse_num-1]),preds[horse_num-1,1])
+        ylabel = 'Normalized Feature Value'
+        title = 'Horse '+str(horse_num)+' Features'
 
-        out_file = os.path.join(out_dir, data_type+'_weight_vs_'+str(horse_num)+'.jpg')
+        out_file = os.path.join(out_dir, 'duration_vs_duration_normalized_'+str(horse_num)+'.jpg')
         xtick_labels = all_aus
         visualize.plotGroupBar(out_file ,dict_vals,xtick_labels,legend_vals,colors,xlabel='',ylabel = ylabel,title=title,width=0.4,ylim=None,loc=None)
-        
 
+
+def main():
+    script_lda()
+    # script_lda_weight_analysis()
     # print 'pca.coef_',pca.coef_
     # print 'pca.intercept_',pca.intercept_
 
