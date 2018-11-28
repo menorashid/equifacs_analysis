@@ -11,7 +11,7 @@ def make_data_mat_frequency(data_dict, all_aus, key_arr ):
         for idx_au, au_curr in enumerate(all_aus):
             all_counts[idx_k,idx_au] = au_anno.count(au_curr)
 
-        assert sum(all_counts[idx_k,:])==len(au_anno)
+        # assert sum(all_counts[idx_k,:])==len(au_anno)
 
     
     return all_counts
@@ -31,7 +31,7 @@ def make_data_mat_duration(data_dict, all_aus, key_arr ):
             all_counts[idx_k,idx_au] = np.sum(time_anno[au_anno==au_curr])
             # au_anno.count(au_curr)
 
-        assert np.abs(np.sum(all_counts[idx_k,:]) - np.sum(time_anno))<1e-10
+        # assert np.abs(np.sum(all_counts[idx_k,:]) - np.sum(time_anno))<1e-10
 
     
     return all_counts
@@ -117,13 +117,18 @@ def get_data_by_type(data_dict, all_aus, key_arr, data_type):
     return all_counts
 
 
-def script_lda():
+def script_lda(norm = 'l2', feat_keep = None):
     dir_data = '../data'
     out_dir = '../experiments'
-    norm = 'l2'
     # norm = 'mean'
     # norm = 'mean_std'
-    out_dir = os.path.join(out_dir,'lda_film_data_12_withLabels_'+norm)
+
+    out_dir_curr = ['lda_film_data_12_withLabels',norm]
+    if feat_keep is not None:
+        out_dir_curr = out_dir_curr+feat_keep
+    
+    out_dir_curr = '_'.join(out_dir_curr)
+    out_dir = os.path.join(out_dir,out_dir_curr)
     util.mkdir(out_dir)
 
     file_data = os.path.join(dir_data,'Film_data_.csv')
@@ -131,6 +136,18 @@ def script_lda():
     data_dict = clean_data(data_dict)
 
     all_aus = get_all_aus(data_dict)
+    if feat_keep is not None:
+        bin_au = np.zeros((len(feat_keep), len(all_aus)))
+        for idx_val,val in enumerate(all_aus): 
+            for idx_feat, feat in enumerate(feat_keep):
+                if feat in val:
+                    bin_au[idx_feat, idx_val]=1
+        bin_au = np.sum(bin_au,axis = 0)>0
+        all_aus = [val for idx_val,val in enumerate(all_aus) if bin_au[idx_val]]
+        assert len(all_aus)==np.sum(bin_au)
+
+    print all_aus
+
     key_arr = range(1,13)
     # range(1,13)
     no_pain = np.array([3,6,7,8,9,10])
@@ -152,6 +169,12 @@ def script_lda():
     for data_type in data_types:
         
         all_counts = get_data_by_type(data_dict, all_aus, key_arr, data_type)
+        print all_counts.shape
+        # all_counts = all_counts[:,bin_au]
+        # print all_counts.shape
+
+        # raw_input()
+        
         
         if norm =='l2':
             scaler = sklearn.preprocessing.Normalizer()
@@ -191,7 +214,7 @@ def script_lda():
         else:
             all_aus_curr = all_aus
 
-        do_weight_analysis(out_dir_analysis, data_pca, bin_pain, preds, weight, range(1,13), all_aus_curr)
+        do_weight_analysis(out_dir_analysis, data_pca, bin_pain, preds, weight, key_arr, all_aus_curr)
 
         # break
     visualize.writeHTMLForFolder(out_dir)
@@ -310,8 +333,34 @@ def script_comparing_features():
         visualize.plotGroupBar(out_file ,dict_vals,xtick_labels,legend_vals,colors,xlabel='',ylabel = ylabel,title=title,width=0.4,ylim=None,loc=None)
 
 
+def verifying_data():
+    dir_data = '../data'
+    file_data = os.path.join(dir_data,'Film_data_.csv')
+    data_dict = read_anno_file(file_data)
+    data_dict = clean_data(data_dict)
+
+    all_aus = get_all_aus(data_dict)
+    key_arr = range(1,13)
+    data_types = ['frequency', 'duration', 'both', 'both_normalized','duration_normalized']
+    
+    for data_type in data_types:
+        
+        all_counts = get_data_by_type(data_dict, all_aus, key_arr, data_type)
+        print data_type
+        for idx_r, r in enumerate(all_counts):
+            print 'Video',idx_r+1
+            for idx_r_curr,r_curr in enumerate(r):
+                if r_curr>0:
+                    print all_aus[idx_r_curr],r_curr
+            print '__'
+            raw_input()
+
 def main():
-    script_lda()
+
+    
+    print 'hello'
+
+    # script_lda(feat_keep=['au','ad'])
     # script_lda_weight_analysis()
     # print 'pca.coef_',pca.coef_
     # print 'pca.intercept_',pca.intercept_

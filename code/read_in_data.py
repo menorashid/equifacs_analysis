@@ -48,14 +48,17 @@ def clean_data(data_dict, remove_lr = True):
         time_keep = []
 
         for idx_au, au in enumerate(au_list):
-            au = au.lower()
+            
+            au = au.lower().strip()
+            
             if 'lip' in au:
                 continue
             
             if remove_lr:
                 if au.endswith('l') or au.endswith('r'):
                     au = au[:-1]
-                    
+                    au = au.strip()
+
             au_keep.append(au)
             time_keep.append(time_list[idx_au])
 
