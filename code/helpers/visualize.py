@@ -419,36 +419,53 @@ def plot_colored_mats(out_file, mat_curr, min_val, max_val, title='', cmap=plt.c
 def plot_confusion_matrix(cm, classes, out_file,
                           normalize=False,
                           title='Confusion matrix',
-                          cmap=plt.cm.Blues):
+                          cmap=plt.cm.Blues, ylabel = 'True label', xlabel = 'Predicted label',thresh =None, fmt = 'd', figsize = None):
     """
     This function prints and plots the confusion matrix.
     Normalization can be applied by setting `normalize=True`.
     """
+    # if normalize=='all':
+        
+    #     cm = cm.astype('float') / np.sum(cm) *100
+    # el
     if normalize:
-        cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+        sums = cm.sum(axis=1)[:, np.newaxis]
+        sums[sums==0]=1
+        cm = cm.astype('float') / sums
         # print("Normalized confusion matrix")
     # else:
         # print('Confusion matrix, without normalization')
 
     # print(cm)
+    if figsize is not None:
+    # fig_size = (0.5*cm.shape[0]+0.5,0.5*cm.shape[1]-0.5)
+        plt.figure(figsize = figsize)
+    else:
+        plt.figure()
 
     plt.imshow(cm, interpolation='nearest', cmap=cmap)
     plt.title(title)
     plt.colorbar()
     tick_marks = np.arange(len(classes))
-    plt.xticks(tick_marks, classes, rotation=45)
-    plt.yticks(tick_marks, classes)
+    plt.xticks(tick_marks[:cm.shape[1]], classes, rotation=45)
+    plt.yticks(tick_marks[:cm.shape[0]], classes)
 
-    fmt = '.2f' if normalize else 'd'
-    thresh = cm.max() / 2.
+    # fmt = '.2f' if type(cm[0][0])==np.float else 'd'
+
+    if thresh is None:
+        thresh = cm.max() / 2.
+    
+    # 
     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        color = "white" if cm[i, j] > thresh else "black"
         plt.text(j, i, format(cm[i, j], fmt),
                  horizontalalignment="center",
-                 color="white" if cm[i, j] > thresh else "black")
+                 color=color)
+        # print cm[i,j],thresh,cm[i,j]>thresh
 
     plt.tight_layout()
-    plt.ylabel('True label')
-    plt.xlabel('Predicted label')
+    plt.ylabel(ylabel)
+    plt.xlabel(xlabel)
     plt.savefig(out_file);
     plt.close();
 

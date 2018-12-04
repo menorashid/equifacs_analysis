@@ -1,5 +1,5 @@
 import sklearn
-from sklearn import preprocessing,decomposition,discriminant_analysis
+from sklearn import preprocessing,decomposition,discriminant_analysis,pipeline
 from helpers import util, visualize
 from read_in_data import *
 
@@ -15,6 +15,7 @@ def make_data_mat_frequency(data_dict, all_aus, key_arr ):
 
     
     return all_counts
+
 
 
 def make_data_mat_duration(data_dict, all_aus, key_arr ):
@@ -36,17 +37,25 @@ def make_data_mat_duration(data_dict, all_aus, key_arr ):
     
     return all_counts
 
+def get_all_data(dir_data):
+    file_data = os.path.join(dir_data,'Film_data_.csv')
+    data_dict = read_anno_file(file_data)
+    data_dict = clean_data(data_dict)
+    all_aus = get_all_aus(data_dict)
+    return data_dict, all_aus
+
 def script_pca():
     dir_data = '../data'
     out_dir = '../experiments'
     out_dir = os.path.join(out_dir,'pca_film_data_12')
     util.mkdir(out_dir)
 
-    file_data = os.path.join(dir_data,'Film_data_.csv')
-    data_dict = read_anno_file(file_data)
-    data_dict = clean_data(data_dict)
+    # file_data = os.path.join(dir_data,'Film_data_.csv')
+    # data_dict = read_anno_file(file_data)
+    # data_dict = clean_data(data_dict)
+    # all_aus = get_all_aus(data_dict)
 
-    all_aus = get_all_aus(data_dict)
+    data_dict, all_aus = get_all_data(dir_data)
     key_arr = range(1,13)
     no_pain = np.array([3,6,7,8,9,10])
     pain = np.array([1,2,4,5,11,12])
@@ -117,6 +126,28 @@ def get_data_by_type(data_dict, all_aus, key_arr, data_type):
     return all_counts
 
 
+
+def fit_lda(all_counts, class_pain, norm, priors = None):
+    if norm =='l2':
+        scaler = sklearn.preprocessing.Normalizer()
+    elif norm=='l2_mean':
+        scaler = sklearn.pipeline.Pipeline([('l2',sklearn.preprocessing.Normalizer()),
+            ('mean',sklearn.preprocessing.StandardScaler(with_std = False))])
+    elif norm=='l2_mean_std':
+        scaler = sklearn.pipeline.Pipeline([('l2',sklearn.preprocessing.Normalizer()),
+            ('mean',sklearn.preprocessing.StandardScaler())])
+    elif norm=='mean':
+        scaler = sklearn.preprocessing.StandardScaler(with_std = False)
+    else:
+        scaler = sklearn.preprocessing.StandardScaler()
+    
+    scaler.fit(all_counts)
+    data_lda = scaler.transform(all_counts)
+        
+    lda = sklearn.discriminant_analysis.LinearDiscriminantAnalysis(priors = priors)
+    lda.fit(data_lda, class_pain)
+    return lda, scaler, data_lda
+
 def script_lda(norm = 'l2', feat_keep = None):
     dir_data = '../data'
     out_dir = '../experiments'
@@ -131,11 +162,13 @@ def script_lda(norm = 'l2', feat_keep = None):
     out_dir = os.path.join(out_dir,out_dir_curr)
     util.mkdir(out_dir)
 
-    file_data = os.path.join(dir_data,'Film_data_.csv')
-    data_dict = read_anno_file(file_data)
-    data_dict = clean_data(data_dict)
+    # file_data = os.path.join(dir_data,'Film_data_.csv')
+    # data_dict = read_anno_file(file_data)
+    # data_dict = clean_data(data_dict)
+    # all_aus = get_all_aus(data_dict)
 
-    all_aus = get_all_aus(data_dict)
+    data_dict, all_aus = get_all_data(dir_data)
+
     if feat_keep is not None:
         bin_au = np.zeros((len(feat_keep), len(all_aus)))
         for idx_val,val in enumerate(all_aus): 
@@ -176,18 +209,20 @@ def script_lda(norm = 'l2', feat_keep = None):
         # raw_input()
         
         
-        if norm =='l2':
-            scaler = sklearn.preprocessing.Normalizer()
-        elif norm=='mean':
-            scaler = sklearn.preprocessing.StandardScaler(with_std = False)
-        else:
-            scaler = sklearn.preprocessing.StandardScaler()
+        # if norm =='l2':
+        #     scaler = sklearn.preprocessing.Normalizer()
+        # elif norm=='mean':
+        #     scaler = sklearn.preprocessing.StandardScaler(with_std = False)
+        # else:
+        #     scaler = sklearn.preprocessing.StandardScaler()
         
-        scaler.fit(all_counts)
-        data_pca = scaler.transform(all_counts)
+        # scaler.fit(all_counts)
+        # data_pca = scaler.transform(all_counts)
         
-        pca = sklearn.discriminant_analysis.LinearDiscriminantAnalysis()
-        pca.fit(data_pca, class_pain)
+        # pca = sklearn.discriminant_analysis.LinearDiscriminantAnalysis()
+        # pca.fit(data_pca, class_pain)
+        
+        pca, scaler, data_pca = fit_lda(all_counts, class_pain, norm)
         score =pca.score(data_pca,class_pain) 
         preds = pca.predict_proba(data_pca) 
         weight = pca.coef_[0]
@@ -360,7 +395,7 @@ def main():
     
     print 'hello'
 
-    # script_lda(feat_keep=['au','ad'])
+    script_lda(feat_keep=['au','ad'])
     # script_lda_weight_analysis()
     # print 'pca.coef_',pca.coef_
     # print 'pca.intercept_',pca.intercept_
