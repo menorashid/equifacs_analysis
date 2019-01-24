@@ -33,9 +33,13 @@ def read_start_stop_anno_file(file_name):
             duration_list = find_next_list(df, keys, idx_key,'duration')
             start_time_list = find_next_list(df, keys, idx_key,'start')
             end_time_list = find_next_list(df, keys, idx_key,'end')
-            
             vid_number = int(k.strip().split()[-1])
-            len_time  = facs_list.index('nan')
+            if 'nan' in facs_list:
+                len_time  = facs_list.index('nan')
+            else:
+                len_time = len(facs_list)
+            
+
             facs_list = facs_list[1:len_time]
             duration_list = [float(val.replace(',','.')) for val in duration_list[1:len_time]]
             start_time_list = clean_start_end_times(start_time_list[1:len_time])
@@ -92,7 +96,7 @@ def clean_data(data_dict, remove_lr = True):
 
         for idx_au, au in enumerate(au_list):
             
-            au = au.lower().strip()
+            au = au.lower().split()[0].strip()
             
             if 'lip' in au or 'uncodable' in au:
                 continue

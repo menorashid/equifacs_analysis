@@ -205,6 +205,52 @@ def plotErrorBars(dict_to_plot,x_lim,y_lim,xlabel,y_label,title,out_file,margin=
     plt.savefig(out_file);
     plt.close();
 
+def plotMultiHist(out_file, vals, num_bins, title='',xlabel='',ylabel='',legend_entries=None, loc=0,outside=False,logscale=False,colors=None,xticks=None,ylim=None, align = 'right'):
+
+    plt.title(title);
+    plt.grid(1);
+    plt.xlabel(xlabel);
+    plt.ylabel(ylabel);
+    if logscale:
+        plt.gca().set_xscale('log')
+    # assert len(xs)==len(ys)
+    alpha = 1/float(len(vals))
+    handles = []
+    for idx_val,val in enumerate(vals):
+        if legend_entries is not None:
+            handle = plt.hist(val, num_bins[idx_val], alpha=alpha, label=legend_entries[idx_val], align = align)
+            # handles.append(handle)
+        else:
+            handle = plt.hist(val, num_bins[idx_val], alpha=alpha, align = align)
+        handles.append(handle)
+
+    if legend_entries is not None:
+        if outside:
+            lgd=plt.legend(loc=loc,bbox_to_anchor=(1.05, 1),borderaxespad=0.)
+        else:
+            lgd=plt.legend(loc=loc)    
+
+
+    if xticks is not None:
+        ax = plt.gca()
+        ax.set_xticks(num_bins[0])
+        if len(xticks)>13:
+            ax.set_xticklabels(xticks, fontsize = 'small')
+        else:
+            ax.set_xticklabels(xticks)
+        
+
+    if ylim is not None:
+        plt.ylim([ylim[0],ylim[1]]);
+
+    if legend_entries is not None:
+        plt.savefig(out_file,bbox_extra_artists=(lgd,), bbox_inches='tight')
+    else:
+        plt.savefig(out_file);
+
+    plt.close();
+
+
 def plotSimple(xAndYs,out_file=None,title='',xlabel='',ylabel='',legend_entries=None,loc=0,outside=False,logscale=False,colors=None,xticks=None,ylim=None,noline = False, mark_labels = None):
     plt.title(title);
     plt.grid(1);
@@ -239,7 +285,8 @@ def plotSimple(xAndYs,out_file=None,title='',xlabel='',ylabel='',legend_entries=
 
     if xticks is not None:
         ax = plt.gca()
-        ax.set_xticks(xticks)
+        ax.set_xticks(xAndYs[0][0])
+        ax.set_xticklabels(xticks,rotation=90)
 
     if ylim is not None:
         plt.ylim([ylim[0],ylim[1]]);
@@ -264,7 +311,7 @@ def writeHTMLForFolder(path_to_im,ext='jpg',height=300,width=300):
 def plotGroupBar(out_file,dict_vals,xtick_labels,legend_vals,colors,xlabel='',ylabel='',title='',width=0.25,ylim=None,loc=None):
     # print 'loc',loc
     if loc is None:
-        loc=2;
+        loc=0;
     # Setting the positions and width for the bars
     # if ylim is None:
     #     vals=dict_vals.values();
