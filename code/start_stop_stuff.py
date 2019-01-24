@@ -746,15 +746,112 @@ def get_duration_stats():
     # duration_arr = []
     # for 
 
+    # data_dict[vid_number] = [facs_list, duration_list, start_time_list, end_time_list]
 
+
+    au_duration_dict = {}
+    au_list = []
+    vid_name = []
+    duration_list = []
     for k in data_dict.keys():
-        print k
-        print len(data_dict[k])
-        print data_dict[k][0][3]
-        print data_dict[k][1][3]
-        print data_dict[k][2][3]
-        print data_dict[k][3][3]
-        break
+        # print k,len(data_dict[k][1])
+        num_occ = len(data_dict[k][1])
+
+        vid_name.extend([k]*num_occ)
+        duration_list += data_dict[k][1]
+        au_list += data_dict[k][0]
+
+    # print len(vid_name), len(duration_list), len(au_list)
+    arr = [vid_name, duration_list, au_list]
+    for idx_arr_curr, arr_curr in enumerate(arr):
+        # print len(arr_curr)
+        arr[idx_arr_curr] = np.array(arr_curr)
+        # print arr[idx_arr_curr].shape
+        # print np.unique(arr[idx_arr_curr])
+
+    [vid_name, duration_list, au_list] = arr
+
+    # get max duration
+    max_duration = np.max(duration_list)
+    # decide inc for duration
+    inc = 1
+    max_duration = np.floor(max_duration)
+    bin_range = np.arange(0,max_duration+(inc*2),inc)
+
+    # for each au get hist pain and no pain
+    bin_pain = np.in1d(vid_name, pain)
+    # print np.sum(bin_pain), bin_pain.shape
+
+    for au_curr in np.unique(au_list):
+        bin_au = au_list==au_curr
+        rel_bin = np.logical_and(bin_pain, bin_au)
+        rel_bin_np = np.logical_and(~bin_pain, bin_au)
+        dur_p = duration_list[rel_bin]
+        dur_np = duration_list[rel_bin_np]
+        
+        max_duration = np.max(duration_list[bin_au])
+        num_occ = np.sum(bin_au)
+        num_occ = 2 if num_occ==1 else num_occ
+        # print num_occ
+        # print max_duration
+        bin_range = np.linspace(0,max_duration,num = min(num_occ,10), endpoint = True)
+        
+
+
+
+
+        hist_p,bin_edges = np.histogram(dur_p,bin_range)
+        hist_np,bin_edges = np.histogram(dur_np,bin_range)
+        
+        diffs = hist_np-hist_p
+        idx_max = np.argmax(diffs)
+        val_max = bin_edges[idx_max+1]
+
+        hist_p = hist_p/np.linalg.norm(hist_p, ord = 1)
+        hist_np = hist_np/np.linalg.norm(hist_np, ord = 1)
+
+        # print hist_p.shape,dur_p.shape
+        # print hist_np.shape,dur_np.shape
+        hist_np [ np.isnan(hist_np)] = 0
+        hist_p [ np.isnan(hist_p)] = 0
+
+        # raw_input()
+        # print hist_p.shape
+        # print hist_np.shape
+
+
+        diffs_p = hist_p - hist_np
+        
+        dict_vals = {'Pain':hist_p,'No Pain': hist_np}
+        legend_vals = ['Pain','No Pain']
+        ylabel = 'Frequency'
+        # print bin_edges.shape
+        # print hist_p.shape
+        # print hist_np.shape
+        xtick_labels = ['%.2f'%edge_curr for edge_curr in bin_edges[1:]]
+        xlabel = 'Duration'
+        colors = ['b','g']
+        title = au_curr.upper()
+        out_file_diff = os.path.join(out_dir, au_curr+'.jpg')
+
+        visualize.plotGroupBar(out_file_diff,dict_vals = dict_vals,xtick_labels = xtick_labels,legend_vals = legend_vals,colors = colors,xlabel=xlabel,ylabel=ylabel,title=title, width = 0.5)
+        # raw_input()
+
+    visualize.writeHTMLForFolder(out_dir)
+
+
+    # plot it
+
+
+
+    # for k in data_dict.keys():
+    #     print k
+    #     print len(data_dict[k])
+    #     print data_dict[k][0][3]
+    #     print data_dict[k][1][3]
+    #     print data_dict[k][2][3]
+    #     print data_dict[k][3][3]
+    #     break
     
 
 def testing_clinical():
@@ -856,7 +953,8 @@ def testing_clinical():
 
 def main():
 
-    testing_clinical()    
+    # testing_clinical()    
+    get_duration_stats()
 
     return
 

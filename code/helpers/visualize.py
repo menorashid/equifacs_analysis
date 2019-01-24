@@ -340,7 +340,8 @@ def plotGroupBar(out_file,dict_vals,xtick_labels,legend_vals,colors,xlabel='',yl
 
     for pos_idx,legend_val in enumerate(legend_vals):
         # print legend_val,[p + width*pos_idx for p in pos],dict_vals[legend_val]
-        # print [p + width*pos_idx for p in pos],dict_vals[legend_val],width,colors[pos_idx],legend_val
+        print [p + width*pos_idx for p in pos],dict_vals[legend_val],width,colors[pos_idx],legend_val
+        # print len(pos), dict_vals[legend_val].shape
         plt.bar([p + width*pos_idx for p in pos],dict_vals[legend_val],width,color=colors[pos_idx],label=legend_val)
 
     ax = plt.gca()

@@ -1,0 +1,201 @@
+\begin{figure}
+	\centering
+	\begin{tabular}{ccccc}
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_count_freq2/hist_au_ad.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_count_freq5/hist_au_ad.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_count_freq10/hist_au_ad.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_count_freq15/hist_au_ad.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_count_freq30/hist_au_ad.jpg}
+	\end{tabular}
+	\caption{AU+AD frequency distribution for different sized time segments for pain and no-pain videos}
+		\label{fig_au_ad_dist}
+\end{figure}
+
+0.045 & 0.085 & 0.141 & 0.332 & 0.770
+
+au_type_freq5/hist_au_True_diff.jpg
+
+\begin{figure}[]
+	\centering
+	\begin{tabular}{cccc}
+		\includegraphics[width = 0.23\textwidth]{./experiments/au_type_freq5/hist_au_True.jpg}&
+		\includegraphics[width = 0.23\textwidth]{./experiments/au_type_freq5/hist_au_False.jpg}&
+		\includegraphics[width = 0.23\textwidth]{./experiments/au_type_freq15/hist_au_True.jpg}&
+		\includegraphics[width = 0.23\textwidth]{./experiments/au_type_freq15/hist_au_False.jpg}
+	\end{tabular}
+	\caption{Comparison of normalized frequency distribution for t=5 and t=15 with and without setting a k}
+		\label{fig_au_type_hist_comparison}
+\end{figure}
+\begin{figure}
+	\centering
+	\begin{tabular}{ccccc}
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq2/hist_au_ad_True.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq5/hist_au_ad_True.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq10/hist_au_ad_True.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq15/hist_au_ad_True.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq30/hist_au_ad_True.jpg}
+	\end{tabular}
+	\caption{AU+AD normalized frequency distribution across type for different sized time segments for pain and no-pain videos}
+	\label{fig_au_ad_type_hist}
+\end{figure}
+
+\begin{figure}[]
+	\centering
+	\begin{tabular}{ccccc}
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq2/hist_au_True_diff.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq5/hist_au_True_diff.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq10/hist_au_True_diff.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq15/hist_au_True_diff.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq30/hist_au_True_diff.jpg}
+	\end{tabular}
+	\caption{AUs sorted by normalized frequency difference for different sized time segments for pain and no-pain videos}
+		\label{fig_au_type_diff}
+\end{figure}
+\begin{figure}
+	\centering
+	\begin{tabular}{ccccc}
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq2/hist_au_ad_True_diff.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq5/hist_au_ad_True_diff.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq10/hist_au_ad_True_diff.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq15/hist_au_ad_True_diff.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq30/hist_au_ad_True_diff.jpg}
+	\end{tabular}
+	\caption{AU+AD sorted by normalized frequency difference for different sized time segments for pain and no-pain videos}
+	\label{fig_au_ad_type_diff}
+\end{figure}
+
+
+
+\begin{figure}
+	\centering
+	\begin{tabular}{ccccc}
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq2/hist_au_ad_True_diff.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq5/hist_au_ad_True_diff.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq10/hist_au_ad_True_diff.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq15/hist_au_ad_True_diff.jpg}&
+		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq30/hist_au_ad_True_diff.jpg}
+	\end{tabular}
+	\caption{AU+AD sorted by normalized frequency difference for different sized time segments for pain and no-pain videos}
+	\label{fig_au_ad_type_diff}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\begin{tabular}{c|ccc}
+	\hline
+	Binary&
+	Frequency&
+	Duration\\
+	\hline
+	AU&
+	\includegraphics[width = 0.19\textwidth]{./experiments/knn_10/metric_cosine_algorithm_brute_majority_binary_au.jpg}&
+	\includegraphics[width = 0.19\textwidth]{./experiments/knn_5/metric_cosine_algorithm_brute_majority_frequency_au.jpg}&
+	\includegraphics[width = 0.19\textwidth]{./experiments/knn_2/metric_cosine_algorithm_brute_majority_duration_au.jpg}\\
+	\hline
+	AU+AD&
+	\includegraphics[width = 0.19\textwidth]{./experiments/knn_5/metric_cosine_algorithm_brute_majority_binary_au_ad.jpg}&
+	\includegraphics[width = 0.19\textwidth]{./experiments/knn_2/metric_cosine_algorithm_brute_majority_frequency_au_ad.jpg}&
+	\includegraphics[width = 0.19\textwidth]{./experiments/knn_5/metric_cosine_algorithm_brute_majority_duration_au_ad.jpg}\\
+	\hline
+	\end{tabular}
+	\caption{Best Performing KNN schemes for different AU subsets and feature type}
+	\label{fig_best_knn}
+\end{figure}
+
+
+
+
+MAJORITY AU
+2 2 majority binary l2_mean_std au
+Train mean 0.74 std 0.04
+Test mean 0.50 std 0.50
+2 2 majority frequency l2_mean_std au
+Train mean 0.77 std 0.03
+Test mean 0.58 std 0.49
+2 2 majority duration l2_mean_std au
+Train mean 0.75 std 0.03
+Test mean 0.50 std 0.50
+5 3 majority binary l2_mean_std au
+Train mean 0.83 std 0.03
+Test mean 0.50 std 0.50
+5 3 majority frequency l2_mean_std au
+Train mean 0.84 std 0.04
+Test mean 0.67 std 0.47
+5 3 majority duration l2_mean_std au
+Train mean 0.82 std 0.02
+Test mean 0.58 std 0.49
+10 4 majority binary l2_mean_std au
+Train mean 0.86 std 0.03
+Test mean 0.50 std 0.50
+10 4 majority frequency l2_mean_std au
+Train mean 0.93 std 0.05
+Test mean 0.75 std 0.43
+10 4 majority duration l2_mean_std au
+Train mean 0.94 std 0.03
+Test mean 0.50 std 0.50
+15 6 majority binary l2_mean_std au
+Train mean 0.91 std 0.07
+Test mean 0.42 std 0.49
+15 6 majority frequency l2_mean_std au
+Train mean 0.91 std 0.05
+Test mean 0.33 std 0.47
+15 6 majority duration l2_mean_std au
+Train mean 0.95 std 0.07
+Test mean 0.42 std 0.49
+30 7 majority binary l2_mean_std au
+Train mean 0.98 std 0.05
+Test mean 0.75 std 0.43
+30 7 majority frequency l2_mean_std au
+Train mean 1.00 std 0.00
+Test mean 0.42 std 0.49
+30 7 majority duration l2_mean_std au
+Train mean 0.98 std 0.05
+Test mean 0.50 std 0.50
+
+
+ATLEAST ONE AU
+2 2 atleast_one binary l2_mean_std au
+Train mean 0.74 std 0.04
+Test mean 0.50 std 0.50
+2 2 atleast_one frequency l2_mean_std au
+Train mean 0.77 std 0.03
+Test mean 0.50 std 0.50
+2 2 atleast_one duration l2_mean_std au
+Train mean 0.75 std 0.03
+Test mean 0.58 std 0.49
+5 3 atleast_one binary l2_mean_std au
+Train mean 0.83 std 0.03
+Test mean 0.42 std 0.49
+5 3 atleast_one frequency l2_mean_std au
+Train mean 0.84 std 0.04
+Test mean 0.58 std 0.49
+5 3 atleast_one duration l2_mean_std au
+Train mean 0.82 std 0.02
+Test mean 0.42 std 0.49
+10 4 atleast_one binary l2_mean_std au
+Train mean 0.86 std 0.03
+Test mean 0.25 std 0.43
+10 4 atleast_one frequency l2_mean_std au
+Train mean 0.93 std 0.05
+Test mean 0.33 std 0.47
+10 4 atleast_one duration l2_mean_std au
+Train mean 0.94 std 0.03
+Test mean 0.58 std 0.49
+15 6 atleast_one binary l2_mean_std au
+Train mean 0.91 std 0.07
+Test mean 0.42 std 0.49
+15 6 atleast_one frequency l2_mean_std au
+Train mean 0.91 std 0.05
+Test mean 0.33 std 0.47
+15 6 atleast_one duration l2_mean_std au
+Train mean 0.95 std 0.07
+Test mean 0.42 std 0.49
+30 7 atleast_one binary l2_mean_std au
+Train mean 0.98 std 0.05
+Test mean 0.75 std 0.43
+30 7 atleast_one frequency l2_mean_std au
+Train mean 1.00 std 0.00
+Test mean 0.42 std 0.49
+30 7 atleast_one duration l2_mean_std au
+Train mean 0.98 std 0.05
+Test mean 0.50 std 0.50
