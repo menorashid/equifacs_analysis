@@ -98,7 +98,7 @@ def clean_data(data_dict, remove_lr = True):
             
             au = au.lower().split()[0].strip()
             
-            if 'lip' in au or 'uncodable' in au:
+            if 'lip' in au or 'uncodable' in au or 'uppe' in au:
                 continue
             
             if remove_lr:

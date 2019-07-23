@@ -6,7 +6,7 @@ import itertools
 import loo_classifying as lc
 import scipy
 
-def get_start_stop_feat(data_dict, all_aus, key_arr, inc, data_type, feat_keep = None, vid_length = 30.):
+def get_start_stop_feat(data_dict, all_aus, key_arr, inc, data_type, feat_keep = None, vid_length = 30., step_size = None):
 
     features = []
     all_aus = np.array(all_aus)
@@ -20,22 +20,37 @@ def get_start_stop_feat(data_dict, all_aus, key_arr, inc, data_type, feat_keep =
         end[end>vid_length]=vid_length
         assert start.size == end.size
         # num_steps = int(vid_length/inc)
-        inc_pts = list(np.arange(0,vid_length,inc))
+        if step_size is None:
+            step_size = inc
+        
+        inc_pts = list(np.arange(0,vid_length,step_size))
         inc_pts = inc_pts+[vid_length]
         
-        mat_curr = np.zeros((len(inc_pts)-1, len(all_aus)))
-        for idx_inc, inc_start in enumerate(inc_pts[:-1]):
-            inc_end = inc_pts[idx_inc+1]
-            bin_ex = end<inc_start
-            bin_ex = np.logical_or(bin_ex,start>=inc_end)
-            bin_ex = bin_ex<1
+        # print inc_pts
+        # raw_input()
+        
 
+
+        mat_curr = np.zeros((len(inc_pts)-1, len(all_aus)))
+        num_keep = 0
+        for idx_inc, inc_start in enumerate(inc_pts[:-1]):
+            inc_end = min(vid_length, inc_start+inc)
+            if (inc_end - inc_start)<inc:
+                break
+            num_keep +=1
+            # print inc_start, inc_end
+
+            bin_ex = end<inc_start
+
+            bin_ex = np.logical_or(bin_ex,start>=inc_end)
+
+            bin_ex = bin_ex<1
 
             anno_curr = au_anno[bin_ex]
 
             start_curr = start[bin_ex]
             end_curr = end[bin_ex]
-                
+
             if data_type=='binary':
                 idx_aus = np.in1d(all_aus,anno_curr)
                 mat_curr[idx_inc,idx_aus] = 1
@@ -68,7 +83,7 @@ def get_start_stop_feat(data_dict, all_aus, key_arr, inc, data_type, feat_keep =
                 raise ValueError('not a valid data type '+str(data_type))
 
             
-        
+        mat_curr = mat_curr[:num_keep,:]
         features.append(mat_curr)
         labels = labels+[k]*mat_curr.shape[0]        
 
@@ -79,6 +94,47 @@ def get_start_stop_feat(data_dict, all_aus, key_arr, inc, data_type, feat_keep =
         features, all_aus,_ = lc.prune_features(features, all_aus, feat_keep)
     
     return features, labels, all_aus
+
+def get_time_series_feat(data_dict, feat_keep, key_arr, vid_length = 30., decimal_place = 2):
+    features = []
+    # all_aus = np.array(all_aus)
+    labels = []
+    # np.zeros((len(key_arr),len(all_aus)))
+
+    mat_dict = {}
+
+    for idx_k, k in enumerate(key_arr):
+        
+        num_dec = 10**decimal_place
+        
+        au_anno = np.array(data_dict[k][0])
+        start = np.array(data_dict[k][2])
+        end = np.array(data_dict [k] [3])
+        end[end>vid_length]=vid_length
+
+        assert start.size == end.size
+        
+        mat_time = np.zeros((len(feat_keep), int(vid_length*num_dec)))
+        times = np.arange(0,vid_length*num_dec)
+        start = start*num_dec
+        end = end*num_dec
+
+        times = []
+        for idx_feat_curr, feat_curr in enumerate(feat_keep):
+            bin_rel = au_anno==feat_curr
+            start_vals = start[bin_rel]
+            end_vals = end[bin_rel]
+            for start_curr,end_curr in zip(start_vals, end_vals):
+                start_curr = int(start_curr)
+                end_curr = int(end_curr)
+                mat_time[idx_feat_curr, start_curr:end_curr] = 1
+            times_curr = np.concatenate([start_vals[:,np.newaxis], end_vals[:,np.newaxis]],axis = 1)
+            times.append(times_curr)
+
+        mat_dict[k]=(mat_time, times)
+
+    return mat_dict, feat_keep
+    # , all_aus
 
 
 def count_cooc(features, all_aus, feat_keep):
@@ -105,10 +161,45 @@ def count_cooc(features, all_aus, feat_keep):
     return cooc_bin, sums, all_aus
 
 
+def prune_max_diff(features, bin_pain ):
+    # features, labels, all_aus = get_start_stop_feat(data_dict, all_aus_org, key_arr, inc, data_type, feat_keep = feat_keep)
+
+    # bin_pain = np.in1d(labels, pain)
+
+    class_pain = np.zeros(bin_pain.shape)
+    class_pain[bin_pain]=1
+    class_pain = class_pain.astype(int)
+
+    # feat_keep_str = ['+'.join([str_curr.upper() for str_curr in feat_keep_str])]
+    # if max_diff:
+    features_bin = np.zeros(features.shape)
+    features_bin[features>0]= 1    
+    num_aus = np.sum(features_bin,axis = 1)
+    num_aus_p = num_aus[class_pain>0]
+    num_aus_np = num_aus[class_pain<=0]
+    bin_range = range(features.shape[1]+2)
+
+    hist_p,bin_edges = np.histogram(num_aus_p,bin_range)
+    hist_np,bin_edges = np.histogram(num_aus_np,bin_range)
+
+    diffs = hist_np-hist_p
+    idx_max = np.argmax(diffs)
+    val_max = bin_edges[idx_max+1]
+
+    idx_keep = num_aus>idx_max
+    features = features[idx_keep,:]
+    class_pain = class_pain[idx_keep]
+    bin_pain = bin_pain[idx_keep]
+    # feat_keep_str.append('k='+str(val_max))
+    # else:
+    # feat_keep_str.append('k not set')
+
+    return features, bin_pain, val_max
+
 def script_plot_cooc():
     file_name = '../data/FILM1-12Start_STOP_final_27.11.18.csv'
     data_dict = read_start_stop_anno_file(file_name)
-    data_dict = clean_data(data_dict)
+    data_dict = clean_data(data_dict,remove_lr=False)
     all_aus = get_all_aus(data_dict)
     key_arr = range(1,13)
     pain = np.array([1,2,4,5,11,12])
@@ -116,22 +207,27 @@ def script_plot_cooc():
     # print bin_pain
 
     data_keeps = ['pain','no_pain','all']
-    feat_keeps = [['au','ad']]
+    feat_keeps = [['au','ead']]
     out_dir_meta = '../experiments/visualizing_cooc_12'
     util.mkdir(out_dir_meta)
-    inc_range = [5]
+    inc_range = [1]
+    max_diff = False
     # 5,10,15,30]
 
     for inc in inc_range:
         features, labels,_ = get_start_stop_feat(data_dict, all_aus, key_arr, inc, 'binary')
         print inc, features.shape
+        bin_pain = np.in1d(labels,pain)
+        if max_diff:
+            features, bin_pain, val_max = prune_max_diff(features, bin_pain )
+            
         for data_keep, feat_keep in itertools.product(data_keeps,feat_keeps):
-
+            
             out_dir = os.path.join(out_dir_meta,'_'.join(feat_keep+[str(inc)]))
+            if max_diff:
+                out_dir = out_dir+'_maxdiff'
             util.mkdir(out_dir)
             
-            bin_pain = np.in1d(labels,pain)
-
             if data_keep=='pain':
                 features_curr = features[bin_pain,:]
             elif data_keep=='no_pain':
@@ -149,6 +245,8 @@ def script_plot_cooc():
             # cooc_bin = cooc_bin[:-1,:]
 
             file_str = [data_keep,str(int(inc)),'seconds']+feat_keep
+            if max_diff:
+                file_str.extend(['k',str(val_max)])
             title = ' '.join([val.title() for val in file_str])
             out_file = os.path.join(out_dir,'_'.join(file_str)+'.jpg')
             visualize.plot_confusion_matrix(cooc_bin.astype(int), classes, out_file,normalize=False,title=title,ylabel = '', xlabel = '', figsize = figsize)
@@ -514,23 +612,23 @@ def knn(k_range , inc = 5 ):
 
     util.writeFile(out_file, to_print)
 
-def plot_frquency_distribution(inc):
+def plot_frquency_distribution(inc, step_size):
     file_name = '../data/FILM1-12Start_STOP_final_27.11.18.csv'
     data_dict = read_start_stop_anno_file(file_name)
     data_dict = clean_data(data_dict)
     all_aus_org = get_all_aus(data_dict)
     key_arr = range(1,13)
     pain = np.array([1,2,4,5,11,12])
-    
-    out_dir = '../experiments/au_count_freq'+str(inc)
+
+    out_dir = '../experiments/au_count_freq_inc_'+str(inc)+'_step_'+str(step_size)
     # +'_k_'+str(k)
     util.mkdir(out_dir)
     
-    feat_keeps = [['au','ad']]
+    feat_keeps = [['au','ad','ead']]
     # ['au']]
     # ,['au','ad'],None]    
-    data_types = ['binary']
-    norms = ['l2_mean_std']
+    data_types = ['frequency']
+    # norms = ['l2_mean_std']
     # log_reg_params = {'metric': 'cosine', 'algorithm': 'brute'}
     
     # log_reg_str = []
@@ -542,22 +640,24 @@ def plot_frquency_distribution(inc):
     
 
     to_print = []
-    for (data_type, norm, feat_keep) in itertools.product(data_types, norms, feat_keeps):
+    for (data_type, feat_keep) in itertools.product(data_types,  feat_keeps):
         if feat_keep is None:
             feat_keep_str = ['all']
         else:
             feat_keep_str = feat_keep
         
-        log_reg_str = '_'.join([str(val) for val in feat_keep_str])
-
-        out_file = os.path.join(out_dir, 'hist_'+log_reg_str+'.jpg')
-        str_curr = ' '.join([data_type, str(norm)]+feat_keep_str)
-
-        to_print.append(str_curr)
-        print str_curr
-        title = str_curr 
+        file_str =feat_keep_str+[data_type, inc, step_size]
         
-        features, labels, all_aus = get_start_stop_feat(data_dict, all_aus_org, key_arr, inc, data_type, feat_keep = feat_keep)
+        # str_curr = ' '.join([data_type, str(norm)]+feat_keep_str)
+
+        # to_print.append(str_curr)
+        # print str_curr
+        # title = str_curr 
+        
+        features, labels, all_aus = get_start_stop_feat(data_dict, all_aus_org, key_arr, inc, data_type, feat_keep = feat_keep, step_size = step_size)
+        # print features[labels==2]
+        # print all_aus
+        # raw_input()
         # print inc, features.shape
 
         bin_pain = np.in1d(labels, pain)
@@ -565,7 +665,9 @@ def plot_frquency_distribution(inc):
         class_pain = np.zeros(bin_pain.shape)
         class_pain[bin_pain]=1
         class_pain = class_pain.astype(int)
+        print features
 
+        print features.shape
         num_aus = np.sum(features,axis = 1)
         # print num_aus.shape
         num_aus_p = num_aus[class_pain>0]
@@ -575,12 +677,13 @@ def plot_frquency_distribution(inc):
 
 
 
-        num_bins = [range(features.shape[1]+2),range(features.shape[1]+2)]
+        num_bins = range(int(np.max(num_aus))+2)
+        # ,range(features.shape[1]+2)]
         legend_entries = ['Pain','No Pain']
         vals = [num_aus_p, num_aus_np]
 
-        hist_p,_ = np.histogram(num_aus_p,num_bins[0])
-        hist_np,_ = np.histogram(num_aus_np,num_bins[1])
+        hist_p,_ = np.histogram(num_aus_p,num_bins)
+        hist_np,_ = np.histogram(num_aus_np,num_bins)
         P = hist_p / np.linalg.norm(hist_p, ord=1)
         Q = hist_np / np.linalg.norm(hist_np, ord=1)
         # P = Q
@@ -588,18 +691,38 @@ def plot_frquency_distribution(inc):
 
         # kl1 = scipy.stats.entropy(P,Q, base = 2)
         # kl2 = scipy.stats.entropy(Q,P, base = 2)
+        diffs = hist_np-hist_p
+        idx_max = np.argmax(diffs)
+        val_max = num_bins[idx_max+1]
+
+
+        idx_keep = num_aus>idx_max
+        features = features[idx_keep,:]
+        class_pain = class_pain[idx_keep]
+        bin_pain = bin_pain[idx_keep]
+        # title = file_str[:]
+        
+        file_str.extend(['k',val_max])
+        file_str = [str(val) for val in file_str]
+
+        title = ' '.join(file_str)
+        out_file = os.path.join(out_dir, '_'.join(file_str)+'.jpg')
         
         M = 0.5 * (P + Q)
         jsd = 0.5 * (scipy.stats.entropy(P, M, base = 2) + scipy.stats.entropy(Q, M, base = 2))
 
         # print 'kl1',kl1,'kl2',kl2,'sum',kl1+kl2,'jsd',jsd
 
-        title = 't='+str(inc)+', '+'+'.join([str_curr.upper() for str_curr in feat_keep_str])
+        # title = 't='+str(inc)+', '+'+'.join([str_curr.upper() for str_curr in feat_keep_str])
+
+        # out_file = os.path.join(out_dir, 'hist_'+log_reg_str+'.jpg')
+
         print title+' %.3f'% jsd
         xlabel = 'Number of AUs'
         ylabel = 'Frequncy'
-        xtick_labels = [str(val) for val in num_bins[0]]
-        visualize.plotMultiHist(out_file,vals = vals, num_bins = num_bins, legend_entries = legend_entries, title = title, xlabel = xlabel, ylabel = ylabel, xticks = xtick_labels)
+        cumulative = False
+        xtick_labels = [str(val) for val in num_bins[:-1]]
+        visualize.plotMultiHist(out_file,vals = vals, num_bins = [num_bins, num_bins], legend_entries = legend_entries, title = title, xlabel = xlabel, ylabel = ylabel, xticks = xtick_labels, cumulative = cumulative)
 
 
 def plot_per_au_freq(inc):
@@ -952,9 +1075,13 @@ def testing_clinical():
 
 
 def main():
+    inc = 5
+    step_size = 2.5
 
+    plot_frquency_distribution(inc, step_size)
+    # script_plot_cooc()
     # testing_clinical()    
-    get_duration_stats()
+    # get_duration_stats()
 
     return
 

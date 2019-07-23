@@ -205,7 +205,7 @@ def plotErrorBars(dict_to_plot,x_lim,y_lim,xlabel,y_label,title,out_file,margin=
     plt.savefig(out_file);
     plt.close();
 
-def plotMultiHist(out_file, vals, num_bins, title='',xlabel='',ylabel='',legend_entries=None, loc=0,outside=False,logscale=False,colors=None,xticks=None,ylim=None, align = 'right'):
+def plotMultiHist(out_file, vals, num_bins, title='',xlabel='',ylabel='',legend_entries=None, loc=0,outside=False,logscale=False,colors=None,xticks=None,ylim=None, align = 'right', rotate = False,cumulative = False, density = False):
 
     plt.title(title);
     plt.grid(1);
@@ -218,10 +218,10 @@ def plotMultiHist(out_file, vals, num_bins, title='',xlabel='',ylabel='',legend_
     handles = []
     for idx_val,val in enumerate(vals):
         if legend_entries is not None:
-            handle = plt.hist(val, num_bins[idx_val], alpha=alpha, label=legend_entries[idx_val], align = align)
+            handle = plt.hist(val, num_bins[idx_val], alpha=alpha, label=legend_entries[idx_val], align = align, cumulative = cumulative, density = density)
             # handles.append(handle)
         else:
-            handle = plt.hist(val, num_bins[idx_val], alpha=alpha, align = align)
+            handle = plt.hist(val, num_bins[idx_val], alpha=alpha, align = align,cumulative = cumulative, density = density)
         handles.append(handle)
 
     if legend_entries is not None:
@@ -234,10 +234,15 @@ def plotMultiHist(out_file, vals, num_bins, title='',xlabel='',ylabel='',legend_
     if xticks is not None:
         ax = plt.gca()
         ax.set_xticks(num_bins[0])
-        if len(xticks)>13:
-            ax.set_xticklabels(xticks, fontsize = 'small')
+        if rotate:
+            rotation = 90
         else:
-            ax.set_xticklabels(xticks)
+            rotation = 0
+
+        if len(xticks)>13:
+            ax.set_xticklabels(xticks, fontsize = 'small', rotation = rotation)
+        else:
+            ax.set_xticklabels(xticks, rotation = rotation)
         
 
     if ylim is not None:
