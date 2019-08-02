@@ -6,6 +6,7 @@ import itertools
 import loo_classifying as lc
 import scipy
 from start_stop_stuff import get_start_stop_feat, count_cooc, get_time_series_feat
+from cooc import find_best_clusters_custom
 import numpy as np
 import os
 import math
@@ -42,21 +43,25 @@ def plot_cumulative(out_file, features, labels, pain, file_str, separator):
     return k
 
 
-def get_feats(inc, step_size, flicker = 0):
+def get_feats(inc, step_size, flicker = 0,blink=0):
 
     file_name = '../data/FILM1-12Start_STOP_final_27.11.18.csv'
     data_dict = read_start_stop_anno_file(file_name)
     data_dict = clean_data(data_dict)
     if flicker>0:
         data_dict = create_flicker_category(data_dict, threshold = flicker)
+    if blink>0:
+        assert flicker>0
+        data_dict = create_flicker_category(data_dict, threshold = blink,au_names = ['ead101_ead104','au101'])
+
     all_aus_org = get_all_aus(data_dict)
     key_arr = range(1,13)
     pain = np.array([1,2,4,5,11,12])
 
     feat_keep = ['au','ad','ead']
     data_type = 'frequency'
-
-    file_str =feat_keep+[data_type, inc, step_size]
+    # feat_keep = None
+    file_str =[feat_keep]+[data_type, inc, step_size]
     features, labels, all_aus = get_start_stop_feat(data_dict, all_aus_org, key_arr, inc, data_type, feat_keep = feat_keep, step_size = step_size)
     # print all_aus
     # raw_input()
@@ -134,7 +139,7 @@ def plot_prob_classification(features, labels, all_aus, core_aus, out_dir, remov
             y_val = []
             
             for num_core_k in num_core_range:
-                pain_times = np.sum(rel_num_aus>num_core_k)/float(np.sum(bin_rel))
+                pain_times = np.sum(rel_num_aus>=num_core_k)/float(np.sum(bin_rel))
                 y_val.append(pain_times)
             xAndYs.append((num_core_range, y_val))
             legend_entries.append(str(label_curr))
@@ -321,15 +326,18 @@ def filter_by_aus(features, all_aus, labels, filter_aus, inverse= False):
     # return features_keep, labels_keep
 
 
-def create_flicker_category(data_dict, threshold = 1.0):
+def create_flicker_category(data_dict, threshold = 1.0, au_names = ['ead104','ead101']):
     keys = data_dict.keys()
+    au_names.sort()
     for k in keys:
         
         data_curr = data_dict[k]
         data_curr = [np.array(val) for val in data_curr]
         times = np.array([data_curr[2],data_curr[3]]).T
-        bin_104 = data_curr[0]=='ead104'
-        bin_101 = data_curr[0]=='ead101'
+        bin_104 = data_curr[0]==au_names[0]
+        # 'ead104'
+        bin_101 = data_curr[0]==au_names[1]
+        # 'ead101'
 
         pairs = []
 
@@ -354,7 +362,7 @@ def create_flicker_category(data_dict, threshold = 1.0):
             starts.append(np.min(times[pair,0]))
             ends.append(np.max(times[pair,1]))
             durations.append(ends[-1] - starts[-1])
-            aus.append('ead1014')
+            aus.append('_'.join(au_names))
             bin_remove[pair]=1
         
         bin_keep = np.logical_not(bin_remove)
@@ -406,7 +414,6 @@ def finding_flicker_length():
     visualize.hist(diffs,out_file, normed = False, title = 'Start time diff between ead104 and ead101')
 
 
-
 def main():
     # file_name = '../data/FILM1-12Start_STOP_final_27.11.18.csv'
     # data_dict = read_start_stop_anno_file(file_name)
@@ -416,10 +423,10 @@ def main():
     # # finding_flicker_length()
     # return
 
-    inc = 10
-    step_size = 5
+    inc = 5
+    step_size = 2.5
     separator = 50
-    flicker = 2.
+    flicker = 1.
     pain = np.array([1,2,4,5,11,12])
 
     out_dir = '../experiments/plot_prob_classification_'+str(step_size)+'_'+str(inc)+'_wflicker_'+str(flicker)
@@ -448,18 +455,20 @@ def main():
     
 
     # kunz_core
-    # out_dir = '../experiments/plot_prob_classification_kunz_flicker_removed'
-    # core_aus = ['ad38',
-    #             'au47',
-    #             'au17',
-    #             'au101',
-    #             'ead104']
+    out_dir = '../experiments/plot_prob_classification_kunz'
+    core_aus = ['ad38',
+                'au47',
+                'au17',
+                'au101',
+                'ead104']
 
     util.mkdir(out_dir)
     util.writeFile(os.path.join(out_dir,'aus_considered.txt'), core_aus)
     
 
     features, labels, all_aus, file_str =get_feats(inc, step_size,flicker = flicker)
+
+
     # k = plot_cumulative(out_file, features, labels, pain, file_str, separator)
 
     # print features.shape
@@ -471,10 +480,10 @@ def main():
 
     plot_prob_classification(features, labels, all_aus, core_aus, out_dir)
     # remove_aus = [['ead101','ead104']]
-    remove_aus = [['ead1014']]
-    out_dir = os.path.join(out_dir,'flicker_removed')
-    util.mkdir(out_dir)
-    plot_prob_classification(features, labels, all_aus, core_aus, out_dir, remove_aus = remove_aus)
+    # remove_aus = [['ead1014']]
+    # out_dir = os.path.join(out_dir,'flicker_removed')
+    # util.mkdir(out_dir)
+    # plot_prob_classification(features, labels, all_aus, core_aus, out_dir, remove_aus = remove_aus)
 
     # keep_aus = [['ead104'],['ad38']]
     # out_dir = os.path.join(out_dir,'keeping_ead104_38')

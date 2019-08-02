@@ -97,20 +97,21 @@ def find_best_clusters():
     all_aus = get_all_aus(data_dict)
     key_arr = range(1,13)
     pain = np.array([1,2,4,5,11,12])
-    # bin_pain = np.in1d(np.array(key_arr),pain)
-    # print bin_pain
-
+    
     data_keeps = ['pain','no_pain']
     feat_keep = ['au','ead','ad']
     out_dir = '../experiments/visualizing_cooc_12_diff'
     util.mkdir(out_dir)
-    inc = 2
-    step_size = 1
+    inc = 5
+    step_size = 2.5
     max_diff = False
 
     # for k in key_arr:
-    features, labels,_ = get_start_stop_feat(data_dict, all_aus, key_arr, inc, 'binary', step_size = step_size)
-    
+    features, labels,all_aus_t = get_start_stop_feat(data_dict, all_aus, key_arr, inc, 'binary', step_size = step_size)
+    print features.shape, labels.shape
+    print features[:10]
+    print labels[:10]
+    print all_aus_t
     bin_pain = np.in1d(labels,pain)
     if max_diff:
         features, bin_pain, val_max = prune_max_diff(features, bin_pain )
@@ -146,6 +147,63 @@ def find_best_clusters():
 
     util.writeFile(out_file.replace('.jpg','.txt'),to_print)
 
+def find_best_clusters_custom(features, labels, all_aus, feat_keep, pain, out_dir, inc, step_size):
+    # file_name = '../data/FILM1-12Start_STOP_final_27.11.18.csv'
+    # data_dict = read_start_stop_anno_file(file_name)
+    # data_dict = clean_data(data_dict,remove_lr=True)
+    # all_aus = get_all_aus(data_dict)
+    # key_arr = range(1,13)
+    # pain = np.array([1,2,4,5,11,12])
+    # bin_pain = np.in1d(np.array(key_arr),pain)
+    # # print bin_pain
+
+    data_keeps = ['pain','no_pain']
+    # feat_keep = ['au','ead','ad']
+    # out_dir = '../experiments/visualizing_cooc_12_diff'
+    # util.mkdir(out_dir)
+    # inc = 2
+    # step_size = 1
+    # max_diff = False
+
+    # # for k in key_arr:
+    # features, labels,_ = get_start_stop_feat(data_dict, all_aus, key_arr, inc, 'binary', step_size = step_size)
+    
+    bin_pain = np.in1d(labels,pain)
+    # if max_diff:
+    #     features, bin_pain, val_max = prune_max_diff(features, bin_pain )
+    
+
+    cooc_norm_all = []
+    sums_all = []
+    for data_keep in data_keeps:    
+        cooc_bin, cooc_norm, classes, sums = get_cooc_mat(features, data_keep, None, bin_pain, all_aus)
+        cooc_norm_all.append(cooc_norm)
+        sums_all.append(sums)
+        file_str = [data_keep,inc, step_size]+feat_keep+['normalized']
+        out_file = plot_cooc(cooc_norm, file_str, out_dir, classes)
+
+    file_str = ['diff',inc, step_size]+feat_keep+['normalized']
+    cooc_diff = np.abs(cooc_norm_all[0]-cooc_norm_all[1])
+    out_file = plot_cooc(cooc_diff, file_str, out_dir, classes)
+    
+
+    print cooc_diff.shape
+    cooc_diff_sum = np.sum(cooc_diff,axis = 0)
+    num_non_zero = np.sum(cooc_diff>0, axis = 0)
+    num_non_zero[num_non_zero==0]=1
+    # print sums_all[1].shape
+    # print coof_diff_sum.shape
+    average_diff = cooc_diff_sum/num_non_zero
+    # /sums_all[1].squeeze()
+    arg_sort = np.argsort(average_diff)[::-1]
+    to_print = []
+    for idx in arg_sort:
+        str_curr = ' '.join([str(val) for val in [classes[idx], average_diff[idx]]])
+        print str_curr
+        to_print.append(str_curr)
+
+    util.writeFile(out_file.replace('.jpg','.txt'),to_print)
+
 
 def looking_at_time_series():
     file_name = '../data/FILM1-12Start_STOP_final_27.11.18.csv'
@@ -155,12 +213,12 @@ def looking_at_time_series():
     key_arr = range(1,13)
     pain = np.array([1,2,4,5,11,12])
     
-    out_dir = '../experiments/visualizing_ear_flicker'
+    out_dir = '../experiments/visualizing_ear_movements'
     util.mkdir(out_dir)
     data_keeps = ['pain','no_pain']
     # feat_keep = ['au','ead','ad38']
     # feat_keep = ['ead101','ead101l','ead101r','ead104','ead104l','ead104r',]
-    feat_keep = ['ead101','ead104']
+    feat_keep = ['ead101','ead104', 'ead103','ead102']
     # feat_keep = ['au101','ad38']
     mat_time, feat_keep = get_time_series_feat(data_dict, feat_keep, key_arr)
 

@@ -1,201 +1,47 @@
-\begin{figure}
-	\centering
-	\begin{tabular}{ccccc}
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_count_freq2/hist_au_ad.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_count_freq5/hist_au_ad.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_count_freq10/hist_au_ad.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_count_freq15/hist_au_ad.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_count_freq30/hist_au_ad.jpg}
-	\end{tabular}
-	\caption{AU+AD frequency distribution for different sized time segments for pain and no-pain videos}
-		\label{fig_au_ad_dist}
-\end{figure}
+to do right now:
 
-0.045 & 0.085 & 0.141 & 0.332 & 0.770
+for 5, 2.5 plot frequency stats that look at number of occurrences not number of aus
+convert to a cumulative hist, and use a metric to consider the aus windows you will consider
+use the cutoff metric to look at number of pain aus co-occurring in the same window for pain and no pain
 
-au_type_freq5/hist_au_True_diff.jpg
+repeat with different size observation windows
 
-\begin{figure}[]
-	\centering
-	\begin{tabular}{cccc}
-		\includegraphics[width = 0.23\textwidth]{./experiments/au_type_freq5/hist_au_True.jpg}&
-		\includegraphics[width = 0.23\textwidth]{./experiments/au_type_freq5/hist_au_False.jpg}&
-		\includegraphics[width = 0.23\textwidth]{./experiments/au_type_freq15/hist_au_True.jpg}&
-		\includegraphics[width = 0.23\textwidth]{./experiments/au_type_freq15/hist_au_False.jpg}
-	\end{tabular}
-	\caption{Comparison of normalized frequency distribution for t=5 and t=15 with and without setting a k}
-		\label{fig_au_type_hist_comparison}
-\end{figure}
-\begin{figure}
-	\centering
-	\begin{tabular}{ccccc}
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq2/hist_au_ad_True.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq5/hist_au_ad_True.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq10/hist_au_ad_True.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq15/hist_au_ad_True.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq30/hist_au_ad_True.jpg}
-	\end{tabular}
-	\caption{AU+AD normalized frequency distribution across type for different sized time segments for pain and no-pain videos}
-	\label{fig_au_ad_type_hist}
-\end{figure}
-
-\begin{figure}[]
-	\centering
-	\begin{tabular}{ccccc}
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq2/hist_au_True_diff.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq5/hist_au_True_diff.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq10/hist_au_True_diff.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq15/hist_au_True_diff.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq30/hist_au_True_diff.jpg}
-	\end{tabular}
-	\caption{AUs sorted by normalized frequency difference for different sized time segments for pain and no-pain videos}
-		\label{fig_au_type_diff}
-\end{figure}
-\begin{figure}
-	\centering
-	\begin{tabular}{ccccc}
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq2/hist_au_ad_True_diff.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq5/hist_au_ad_True_diff.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq10/hist_au_ad_True_diff.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq15/hist_au_ad_True_diff.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq30/hist_au_ad_True_diff.jpg}
-	\end{tabular}
-	\caption{AU+AD sorted by normalized frequency difference for different sized time segments for pain and no-pain videos}
-	\label{fig_au_ad_type_diff}
-\end{figure}
+do per horse co-occurrence analysis
+repeat with pruning?
+PUT EVERYTHING in paper
+revisit the intro. lift heavily from pia paper
 
 
+make cumulative graph - done
+return k for 50% no pain - done
+get time segments with that min number of occurrences - done
+look at how many pain features occur together in these segments - done
+also look at duration and frequency of pain aus 
 
-\begin{figure}
-	\centering
-	\begin{tabular}{ccccc}
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq2/hist_au_ad_True_diff.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq5/hist_au_ad_True_diff.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq10/hist_au_ad_True_diff.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq15/hist_au_ad_True_diff.jpg}&
-		\includegraphics[width = 0.19\textwidth]{./experiments/au_type_freq30/hist_au_ad_True_diff.jpg}
-	\end{tabular}
-	\caption{AU+AD sorted by normalized frequency difference for different sized time segments for pain and no-pain videos}
-	\label{fig_au_ad_type_diff}
-\end{figure}
+'ad38','au17','au101','ead101','au145','ead104','ad54','au24'
 
-\begin{figure}
-	\centering
-	\begin{tabular}{c|ccc}
-	\hline
-	Binary&
-	Frequency&
-	Duration\\
-	\hline
-	AU&
-	\includegraphics[width = 0.19\textwidth]{./experiments/knn_10/metric_cosine_algorithm_brute_majority_binary_au.jpg}&
-	\includegraphics[width = 0.19\textwidth]{./experiments/knn_5/metric_cosine_algorithm_brute_majority_frequency_au.jpg}&
-	\includegraphics[width = 0.19\textwidth]{./experiments/knn_2/metric_cosine_algorithm_brute_majority_duration_au.jpg}\\
-	\hline
-	AU+AD&
-	\includegraphics[width = 0.19\textwidth]{./experiments/knn_5/metric_cosine_algorithm_brute_majority_binary_au_ad.jpg}&
-	\includegraphics[width = 0.19\textwidth]{./experiments/knn_2/metric_cosine_algorithm_brute_majority_frequency_au_ad.jpg}&
-	\includegraphics[width = 0.19\textwidth]{./experiments/knn_5/metric_cosine_algorithm_brute_majority_duration_au_ad.jpg}\\
-	\hline
-	\end{tabular}
-	\caption{Best Performing KNN schemes for different AU subsets and feature type}
-	\label{fig_best_knn}
-\end{figure}
+'ad38','au47','au17','au101','ead101','au145','ead104','ad54','au24','au18','au10'
 
 
+Facial expression of pain has attracted attention as tool for assessment of pain in non-verbal human and now also in animals. In animals, protoypical expressions of pain are searched for in horses, using various purpose made observational scales of facial activities or grimaces, scored by direct observation or from images, making the results difficult to compare. The Facial Action Coding System is a fine-grained, objective and anatomy-based coding system developed for humans, but recently modified for use in horses as EquiFACS. Differentiation between 17 Action Units (AUs), 4 Ear Action Descriptors (EADs) can be done from video, inspected frame by frame. The aim of this study was to describe facial actions in horses with and without pain using EquiFACS. From a previous study, we had access to 30 s video recordings of six horses before and after induction of short term ischemic pain. Time of onset and offset of AUs and EADs were recorded in EquiFACS by a certified coder. To determine which facial actions were pain related, we pre-selected the actions that occurred with a frequency above 5\% and then analysed which of these actions that differed between pairs of pain and no-pain horses.
+Maheen…
+Results showed that …. which differs from. …More research is needed to establish the core component of the equine pain face.
 
+Is There A Prototypical Facial Expression Of Pain In Horses?  An Equifacs Based Analysis Of Facial Expressions Of Horses Before And During Acute Experimental Ischemic Pain.
 
-MAJORITY AU
-2 2 majority binary l2_mean_std au
-Train mean 0.74 std 0.04
-Test mean 0.50 std 0.50
-2 2 majority frequency l2_mean_std au
-Train mean 0.77 std 0.03
-Test mean 0.58 std 0.49
-2 2 majority duration l2_mean_std au
-Train mean 0.75 std 0.03
-Test mean 0.50 std 0.50
-5 3 majority binary l2_mean_std au
-Train mean 0.83 std 0.03
-Test mean 0.50 std 0.50
-5 3 majority frequency l2_mean_std au
-Train mean 0.84 std 0.04
-Test mean 0.67 std 0.47
-5 3 majority duration l2_mean_std au
-Train mean 0.82 std 0.02
-Test mean 0.58 std 0.49
-10 4 majority binary l2_mean_std au
-Train mean 0.86 std 0.03
-Test mean 0.50 std 0.50
-10 4 majority frequency l2_mean_std au
-Train mean 0.93 std 0.05
-Test mean 0.75 std 0.43
-10 4 majority duration l2_mean_std au
-Train mean 0.94 std 0.03
-Test mean 0.50 std 0.50
-15 6 majority binary l2_mean_std au
-Train mean 0.91 std 0.07
-Test mean 0.42 std 0.49
-15 6 majority frequency l2_mean_std au
-Train mean 0.91 std 0.05
-Test mean 0.33 std 0.47
-15 6 majority duration l2_mean_std au
-Train mean 0.95 std 0.07
-Test mean 0.42 std 0.49
-30 7 majority binary l2_mean_std au
-Train mean 0.98 std 0.05
-Test mean 0.75 std 0.43
-30 7 majority frequency l2_mean_std au
-Train mean 1.00 std 0.00
-Test mean 0.42 std 0.49
-30 7 majority duration l2_mean_std au
-Train mean 0.98 std 0.05
-Test mean 0.50 std 0.50
+Inner brow raiser (AU101), half blink (AU47), chin raiser (AU17),  ear rotator (AED104) and nostril dilator (AD38) were significantly associated to pain, while, of the 5 percent most frequent descriptors, blink (AU145) and ears forward (EAD101) 
 
-
-ATLEAST ONE AU
-2 2 atleast_one binary l2_mean_std au
-Train mean 0.74 std 0.04
-Test mean 0.50 std 0.50
-2 2 atleast_one frequency l2_mean_std au
-Train mean 0.77 std 0.03
-Test mean 0.50 std 0.50
-2 2 atleast_one duration l2_mean_std au
-Train mean 0.75 std 0.03
-Test mean 0.58 std 0.49
-5 3 atleast_one binary l2_mean_std au
-Train mean 0.83 std 0.03
-Test mean 0.42 std 0.49
-5 3 atleast_one frequency l2_mean_std au
-Train mean 0.84 std 0.04
-Test mean 0.58 std 0.49
-5 3 atleast_one duration l2_mean_std au
-Train mean 0.82 std 0.02
-Test mean 0.42 std 0.49
-10 4 atleast_one binary l2_mean_std au
-Train mean 0.86 std 0.03
-Test mean 0.25 std 0.43
-10 4 atleast_one frequency l2_mean_std au
-Train mean 0.93 std 0.05
-Test mean 0.33 std 0.47
-10 4 atleast_one duration l2_mean_std au
-Train mean 0.94 std 0.03
-Test mean 0.58 std 0.49
-15 6 atleast_one binary l2_mean_std au
-Train mean 0.91 std 0.07
-Test mean 0.42 std 0.49
-15 6 atleast_one frequency l2_mean_std au
-Train mean 0.91 std 0.05
-Test mean 0.33 std 0.47
-15 6 atleast_one duration l2_mean_std au
-Train mean 0.95 std 0.07
-Test mean 0.42 std 0.49
-30 7 atleast_one binary l2_mean_std au
-Train mean 0.98 std 0.05
-Test mean 0.75 std 0.43
-30 7 atleast_one frequency l2_mean_std au
-Train mean 1.00 std 0.00
-Test mean 0.42 std 0.49
-30 7 atleast_one duration l2_mean_std au
-Train mean 0.98 std 0.05
-Test mean 0.50 std 0.50
+\begin{table}
+\centering
+\begin{tabular}{CCCC}
+EquiFACS & Percentage of total & More Frequent in & Description\\
+Code		& Pain video AUs & Pain Videos & \\
+AU17 & 6.18\% & \checkmark & Chin Raiser\\
+AU145 & 6.70\% & \xmark & Blink \\
+EAD101 & 7.47\% & \xmark & Ears Forward\\
+AD38 & 9.27\% & \checkmark & Nostril Dilator\\
+AU47 & 10.56\% & \checkmark & Half Blink\\
+AU101 & 11.34\% & \checkmark & Inner Brow Raiser\\
+EAD104 & 11.85\% & \checkmark & Ear Rotator\\
+\end{tabular}
+\end{table}

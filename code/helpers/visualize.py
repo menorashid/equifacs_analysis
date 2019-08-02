@@ -500,7 +500,7 @@ def plot_confusion_matrix(cm, classes, out_file,
     plt.title(title)
     plt.colorbar()
     tick_marks = np.arange(len(classes))
-    plt.xticks(tick_marks[:cm.shape[1]], classes, rotation=45)
+    plt.xticks(tick_marks[:cm.shape[1]], classes, rotation=90)
     plt.yticks(tick_marks[:cm.shape[0]], classes)
 
     # fmt = '.2f' if type(cm[0][0])==np.float else 'd'
