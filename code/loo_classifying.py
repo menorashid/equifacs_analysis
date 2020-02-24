@@ -131,9 +131,15 @@ def prune_features(features, all_aus, feat_keep):
                     bin_au[idx_feat, idx_val]=1
         bin_au = np.sum(bin_au,axis = 0)>0
         # all_aus = [val for idx_val,val in enumerate(all_aus) if bin_au[idx_val]]
+    
+    aus_no = ['ad51', 'ad52', 'ad53', 'ad54','ad55','ad56', 'ad57', 'ad58']
+    bin_no_keep = np.in1d(all_aus, aus_no)
+    bin_au = np.logical_and(bin_au, np.logical_not(bin_no_keep))
     all_aus = list(np.array(all_aus)[bin_au])
     # assert len(all_aus)==np.sum(bin_au)    
+    # print all_aus
 
+    # raw_input()
     if features is not None:
         features = features[:,bin_au]
     

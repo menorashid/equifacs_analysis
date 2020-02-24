@@ -126,8 +126,7 @@ def get_data_by_type(data_dict, all_aus, key_arr, data_type):
     return all_counts
 
 
-
-def fit_lda(all_counts, class_pain, norm, priors = None):
+def get_scaler(norm):
     if norm =='l2':
         scaler = sklearn.preprocessing.Normalizer()
     elif norm=='l2_mean':
@@ -138,15 +137,96 @@ def fit_lda(all_counts, class_pain, norm, priors = None):
             ('mean',sklearn.preprocessing.StandardScaler())])
     elif norm=='mean':
         scaler = sklearn.preprocessing.StandardScaler(with_std = False)
+    elif norm == None:
+        scaler = sklearn.preprocessing.StandardScaler(with_mean =False, with_std = False)
     else:
         scaler = sklearn.preprocessing.StandardScaler()
+    return scaler
+
+
+def bootstrap(train_data, train_labels, norm, num_neighbors):
+    scaler = get_scaler(norm)
+    scaler.fit(train_data)
+    train_data = scaler.fit_transform(train_data)
+
+    lda = sklearn.neighbors.KNeighborsClassifier(n_neighbors = num_neighbors, algorithm = 'brute')
     
+    lda.fit(train_data, train_labels)
+    # print train_labels
+    pred_labels = lda.predict(train_data)
+    pred_prob = lda.predict_proba(train_data)
+
+    # bin_keep = np.logical_or(
+    # pred_labels[pred_labels!=train_labels]=0
+    # return pred_labels
+    bin_keep = pred_labels ==train_labels
+
+
+
+    bin_true = [np.logical_and(pred_labels ==train_labels, train_labels == val) for val in np.unique(train_labels)]    
+    min_true = np.min([np.sum(bin_curr) for bin_curr in bin_true])
+    # print 'min_true', min_true, num_neighbors
+    if min_true>=num_neighbors:
+        idx_true = [np.where(bin_curr)[0] for bin_curr in bin_true]
+        prob_true = [pred_prob[bin_curr,val] for val, bin_curr in enumerate(idx_true)]
+        top_keep = [np.argsort(prob)[-min_true:] for prob in prob_true]
+
+        top_keep = [idx_true[val][idx_keep] for val,idx_keep in enumerate(top_keep)]
+
+        bin_keep = np.zeros(train_labels.shape)
+        for idx_top,top_keep_curr in enumerate(top_keep):
+            bin_keep[top_keep_curr] = 1
+        bin_keep = bin_keep>0
+    else:
+        bin_keep = np.ones(bin_keep.shape)>0
+
+    return bin_keep
+
+
+def fit_model(all_counts, class_pain, norm, model_type,model_params = None, ):
+    scaler = get_scaler(norm)
     scaler.fit(all_counts)
-    data_lda = scaler.transform(all_counts)
-        
-    lda = sklearn.discriminant_analysis.LinearDiscriminantAnalysis(priors = priors)
+    data_lda = scaler.fit_transform(all_counts)
+    if model_type =='lda':
+        priors = [all_counts.size/float(2*np.sum(class_pain==0)),all_counts.size/float(2*np.sum(class_pain==1))]
+
+        # if model_params is not None:
+        #     lda = sklearn.discriminant_analysis.LinearDiscriminantAnalysis(**
+        #         model_params)
+        # else:
+        lda = sklearn.discriminant_analysis.LinearDiscriminantAnalysis(priors = priors)
+    elif model_type.startswith('knn'):
+        # model_params[
+        lda = sklearn.neighbors.KNeighborsClassifier(**model_params)
+    elif model_type =='radius_nn':
+        lda = sklearn.neighbors.RadiusNeighborsClassifier(**model_params)
+    elif model_type == 'svm':
+        lda = sklearn.svm.SVC(**model_params)
+    elif model_type =='logreg':
+        lda = sklearn.linear_model.LogisticRegression(**model_params)
+        # sklearn.svm.SVC(**model_params)
+
     lda.fit(data_lda, class_pain)
+
+    # dist, ind = lda.kneighbors()
+    # print dist[:30]
+    # print dist[-30:]
+    # print data_lda[:10]
+    # raw_input()
+
+
+
+
     return lda, scaler, data_lda
+
+# def fit_knn(all_counts, class_pain, norm, priors = None):
+#     scaler = get_scaler(norm)
+#     scaler.fit(all_counts)
+#     data_lda = scaler.fit_transform(all_counts)
+        
+#     lda = sklearn.neighbors.KNeighborsClassifier(**priors)
+#     lda.fit(data_lda, class_pain)
+#     return lda, scaler, data_lda    
 
 def script_lda(norm = 'l2', feat_keep = None):
     dir_data = '../data'

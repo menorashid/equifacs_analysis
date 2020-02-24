@@ -55,7 +55,7 @@ def main():
     caus = collapsed_labels+list(rest_aus)
     print len(collapsed_labels)
 
-    find_best_clusters_custom(new_features, labels, caus, feat_keep, pain,  out_dir, inc, step_size)
+    find_best_clusters_custom(new_features, labels, caus, pain,feat_keep, out_dir, inc, step_size, plot_it = True)
     visualize.writeHTMLForFolder(out_dir, height=450, width=500) 
     core_aus = ['nostrilwide','mouthtension','ead104','au101_ead101_ead104','nasolabial']
     out_dir_class = os.path.join(out_dir,'classification_prob')

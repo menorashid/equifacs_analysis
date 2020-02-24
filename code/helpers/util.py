@@ -2,7 +2,7 @@ import numpy as np;
 import scipy
 import subprocess;
 import os;
-
+import datetime
 
 def getFilesInFolder(folder,ext):
     list_files=[os.path.join(folder,file_curr) for file_curr in os.listdir(folder) if file_curr.endswith(ext)];
@@ -195,3 +195,9 @@ def get_class_weights(train_files,au=False):
         return tuple(to_return)
     else:
         return to_return[0]
+
+
+def convert_str_to_sec(val):
+    val = datetime.datetime.strptime(val, '%H:%M:%S.%f').time()
+    val = float(val.hour)*60*60+float(val.minute)*60+float(val.second)+float(val.microsecond)/1000000.
+    return val

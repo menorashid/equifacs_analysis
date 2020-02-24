@@ -345,7 +345,7 @@ def plotGroupBar(out_file,dict_vals,xtick_labels,legend_vals,colors,xlabel='',yl
 
     for pos_idx,legend_val in enumerate(legend_vals):
         # print legend_val,[p + width*pos_idx for p in pos],dict_vals[legend_val]
-        print [p + width*pos_idx for p in pos],dict_vals[legend_val],width,colors[pos_idx],legend_val
+        # print [p + width*pos_idx for p in pos],dict_vals[legend_val],width,colors[pos_idx],legend_val
         # print len(pos), dict_vals[legend_val].shape
         plt.bar([p + width*pos_idx for p in pos],dict_vals[legend_val],width,color=colors[pos_idx],label=legend_val)
 
@@ -353,11 +353,13 @@ def plotGroupBar(out_file,dict_vals,xtick_labels,legend_vals,colors,xlabel='',yl
     
     ax.set_xticks([p + len(legend_vals)/2.0 * width for p in pos])
     # print 'xticks' ,[p + len(legend_vals)/2.0 * width for p in pos]
-    ax.set_xticklabels(xtick_labels,rotation=90)
+    ax.set_xticklabels(xtick_labels,rotation=0)
     # ax.legend( legend_vals,loc=loc)
     if loc>5:
-        plt.legend(legend_vals,bbox_to_anchor=(0., 0, 1., 1), ncol=2);
-    else:
+        # plt.legend(legend_vals,bbox_to_anchor=(0., 0, 1., 1), ncol=2);
+        # if outside:
+        lgd=plt.legend(loc=loc,bbox_to_anchor=(1.05, 1),borderaxespad=0., ncol=2)
+    elif loc>=0:
         ax.legend( legend_vals,loc=loc)
         # , mode="expand", borderaxespad=0.)
 # Setting the x-axis and y-axis limits

@@ -8,7 +8,7 @@ import scipy
 from start_stop_stuff import get_start_stop_feat, count_cooc, get_time_series_feat
 import numpy as np
 import os
-
+import networkx as nx
 
 def get_cooc_mat(features, data_keep, feat_keep, bin_pain, all_aus):
     if data_keep=='pain':
@@ -19,11 +19,13 @@ def get_cooc_mat(features, data_keep, feat_keep, bin_pain, all_aus):
         features_curr = features
 
     cooc_bin, sums, classes = count_cooc(features_curr, all_aus, feat_keep)
-    sums[sums==0]=1
-    sums = sums.T
+    
+    sums_div = np.array(sums)
+    sums_div[sums_div==0]=1
+    sums_div = sums_div.T
 
-    cooc_norm = cooc_bin/sums
-    return cooc_bin, cooc_norm, classes, sums
+    cooc_norm = cooc_bin/sums_div
+    return cooc_bin, cooc_norm, classes, sums.T
 
 def script_plot_cooc():
     file_name = '../data/FILM1-12Start_STOP_final_27.11.18.csv'
@@ -108,10 +110,10 @@ def find_best_clusters():
 
     # for k in key_arr:
     features, labels,all_aus_t = get_start_stop_feat(data_dict, all_aus, key_arr, inc, 'binary', step_size = step_size)
-    print features.shape, labels.shape
-    print features[:10]
-    print labels[:10]
-    print all_aus_t
+    # print features.shape, labels.shape
+    # print features[:10]
+    # print labels[:10]
+    # print all_aus_t
     bin_pain = np.in1d(labels,pain)
     if max_diff:
         features, bin_pain, val_max = prune_max_diff(features, bin_pain )
@@ -131,9 +133,16 @@ def find_best_clusters():
     out_file = plot_cooc(cooc_diff, file_str, out_dir, classes)
     
 
-    print cooc_diff.shape
+    # print cooc_diff.shape
     cooc_diff_sum = np.sum(cooc_diff,axis = 0)
-    num_non_zero = np.sum(cooc_diff>0, axis = 0)
+
+    # print cooc_norm_all[0]>0
+    # print cooc_norm_all[1]>0
+    # raw_input()
+    # print (cooc_norm_all[0]>0+cooc_norm_all[1]>0)>0
+    num_non_zero = np.sum((cooc_norm_all[0]>0+cooc_norm_all[1]>0)>0,axis = 0)
+
+    # np.sum(cooc_diff>0, axis = 0)
     # print sums_all[1].shape
     # print coof_diff_sum.shape
     average_diff = cooc_diff_sum/num_non_zero
@@ -142,12 +151,12 @@ def find_best_clusters():
     to_print = []
     for idx in arg_sort:
         str_curr = ' '.join([str(val) for val in [classes[idx], average_diff[idx]]])
-        print str_curr
+        # print str_curr
         to_print.append(str_curr)
 
     util.writeFile(out_file.replace('.jpg','.txt'),to_print)
 
-def find_best_clusters_custom(features, labels, all_aus, feat_keep, pain, out_dir, inc, step_size):
+def find_best_clusters_custom(features, labels, all_aus, pain,feat_keep =None,  out_dir = None, inc = None, step_size = None ,plot_it = False):
     # file_name = '../data/FILM1-12Start_STOP_final_27.11.18.csv'
     # data_dict = read_start_stop_anno_file(file_name)
     # data_dict = clean_data(data_dict,remove_lr=True)
@@ -179,30 +188,167 @@ def find_best_clusters_custom(features, labels, all_aus, feat_keep, pain, out_di
         cooc_bin, cooc_norm, classes, sums = get_cooc_mat(features, data_keep, None, bin_pain, all_aus)
         cooc_norm_all.append(cooc_norm)
         sums_all.append(sums)
-        file_str = [data_keep,inc, step_size]+feat_keep+['normalized']
-        out_file = plot_cooc(cooc_norm, file_str, out_dir, classes)
+        if plot_it:
+            file_str = [data_keep,inc, step_size]+feat_keep+['normalized']
+            out_file = plot_cooc(cooc_norm, file_str, out_dir, classes)
 
-    file_str = ['diff',inc, step_size]+feat_keep+['normalized']
-    cooc_diff = np.abs(cooc_norm_all[0]-cooc_norm_all[1])
-    out_file = plot_cooc(cooc_diff, file_str, out_dir, classes)
+    cooc_diff_org = cooc_norm_all[0]-cooc_norm_all[1]
+    if plot_it:
+        file_str = ['diff',inc, step_size]+feat_keep+['normalized']
+        out_file = plot_cooc(cooc_diff_org, file_str, out_dir, classes)
+
+    average_diffs = []
+
+    # np.save( '../experiments/cooc_simple/cooc_mat.npy',cooc_diff_org)
+    # np.save( '../experiments/cooc_simple/classes.npy',np.array(classes))
+    # print 'done saving'
+    # np.save( '../experiments/cooc_simple/cooc_mat.npy',cooc_diff_org)
+    # np.save( '../experiments/cooc_simple/classes.npy',np.array(classes))
+    # print 'done saving'
+
+    cooc_diff = np.abs(cooc_diff_org) 
+    cooc_diff_sum = np.sum(cooc_diff,axis = 0)
+    num_non_zero = np.sum(np.logical_or(cooc_norm_all[0]>0 , cooc_norm_all[1]>0).astype(int),axis = 0)
+    num_non_zero[num_non_zero==0]=1
+    average_diff = cooc_diff_sum
+    # /num_non_zero
+    # print average_diff
+
+    average_diffs.append(average_diff)
+
+    cooc_diff_pos = np.array(cooc_diff_org)
+    cooc_diff_pos[cooc_diff_pos<0]=0
+
+    cooc_diff_neg = np.array(cooc_diff_org)
+    cooc_diff_neg[cooc_diff_neg>0]=0
+    cooc_diff_neg = np.abs(cooc_diff_neg)
+
+    cooc_percents = []
+    for cooc_curr in [cooc_diff_pos, cooc_diff_neg]:
+        cooc_diff_sum_curr = np.sum(cooc_curr,axis = 0)
+        cooc_percent = cooc_diff_sum_curr/cooc_diff_sum
+        cooc_percents.append(cooc_percent)
+        # num_non_zero = np.sum(cooc_curr>0, axis = 0)
+        # num_non_zero[num_non_zero==0]=1
+        # average_diffs.append(cooc_diff_sum/num_non_zero)
+
+    # print len(average_diffs)
+    arg_sorts = []
+    to_print = []
+    # for average_diff in average_diffs:
+    arg_sort = np.argsort(average_diff)[::-1]
+    # arg_sorts.append(arg_sort)
+    
+    for idx in arg_sort:
+        str_curr = ' '.join([str(val) for val in [classes[idx], average_diff[idx], cooc_percents[0][idx], cooc_percents[1][idx]]])
+        to_print.append(str_curr)
+    to_print.append('____')
+
+    cooc_percents = [cooc_percent[arg_sort] for cooc_percent in cooc_percents]
+    if plot_it:
+        util.writeFile(out_file.replace('.jpg','.txt'),to_print)
+    return np.array(classes)[arg_sort], average_diff[arg_sort], cooc_percents
+
+
+def find_best_clusters_clique(features, labels, all_aus, pain,feat_keep =None,  out_dir = None, inc = None, step_size = None ,plot_it = False):
+    
+    data_keeps = ['pain','no_pain']
+    
+    bin_pain = np.in1d(labels,pain)
     
 
-    print cooc_diff.shape
-    cooc_diff_sum = np.sum(cooc_diff,axis = 0)
-    num_non_zero = np.sum(cooc_diff>0, axis = 0)
+    cooc_norm_all = []
+    sums_all = []
+    for data_keep in data_keeps:    
+        cooc_bin, cooc_norm, classes, sums = get_cooc_mat(features, data_keep, None, bin_pain, all_aus)
+        cooc_norm_all.append(cooc_norm)
+        sums_all.append(sums)
+        if plot_it:
+            file_str = [data_keep,inc, step_size]+feat_keep+['normalized']
+            out_file = plot_cooc(cooc_norm, file_str, out_dir, classes)
+
+    cooc_diff_org = cooc_norm_all[0]-cooc_norm_all[1]
+    if plot_it:
+        file_str = ['diff',inc, step_size]+feat_keep+['normalized']
+        out_file = plot_cooc(cooc_diff_org, file_str, out_dir, classes)
+
+    average_diffs = []
+
+    cooc_bin = (cooc_diff_org>0).astype(int)
+    cooc_up = np.triu(cooc_bin)
+    cooc_down = np.tril(cooc_bin)
+    cooc_bin = (cooc_up+cooc_down.T)>1
+
+    G = nx.from_numpy_matrix(cooc_bin)
+    cliques =  list(nx.find_cliques(G))
+    clique_idx = []
+    clique_sum = []
+    for idx_k, k in enumerate(cliques):
+        
+        k.sort()        
+        edges = cooc_diff_org[k,:]
+        edges = edges[:,k]
+        edges[edges<0]=0
+        clique_idx.append(k)
+        clique_sum.append(np.sum(edges))
+        
+
+    max_idx = np.argmax(clique_sum)
+    max_clique = clique_idx[max_idx]
+    return classes, max_clique
+
+
+
+
+def find_best_clusters_simple(features, labels, all_aus, pain,feat_keep =None,  out_dir = None, inc = None, step_size = None ,plot_it = False):
+    
+
+    data_keeps = ['pain','no_pain']
+    bin_pain = np.in1d(labels,pain)
+    cooc_norm_all = []
+    sums_all = []
+    for data_keep in data_keeps:    
+        cooc_bin, cooc_norm, classes, sums = get_cooc_mat(features, data_keep, None, bin_pain, all_aus)
+
+        # print sums.shape
+        cooc_norm[cooc_norm==0]=1./21.
+        cooc_norm_all.append(cooc_norm)
+            # cooc_bin+1)
+        # sums_all.append(sums)
+        if plot_it:
+            file_str = [data_keep,inc, step_size]
+            # +feat_keep+['normalized']
+            out_file = plot_cooc(cooc_norm_all[-1], file_str, out_dir, classes)
+
+    # total_cooc = (cooc_norm_all[1]+cooc_norm_all[0])
+    # total_cooc[total_cooc==0]=1
+    # cooc_norm_all[cooc_norm_all==0]=1./cooc_norm_all.shape[0]
+    cooc_diff = (cooc_norm_all[0]-cooc_norm_all[1])
+    # /total_cooc
+
+    if plot_it:
+        file_str = ['diff',inc, step_size]
+        # +feat_keep+['normalized']
+        out_file = plot_cooc(cooc_diff, file_str, out_dir, classes)
+    
+    # cooc_diff[cooc_diff<0]=0
+    cooc_diff_sum = np.sum(np.abs(cooc_diff),axis = 1)
+    num_non_zero = np.sum(np.abs(cooc_diff)>0, axis = 1)
+
     num_non_zero[num_non_zero==0]=1
-    # print sums_all[1].shape
-    # print coof_diff_sum.shape
     average_diff = cooc_diff_sum/num_non_zero
-    # /sums_all[1].squeeze()
+
     arg_sort = np.argsort(average_diff)[::-1]
     to_print = []
     for idx in arg_sort:
         str_curr = ' '.join([str(val) for val in [classes[idx], average_diff[idx]]])
-        print str_curr
         to_print.append(str_curr)
 
-    util.writeFile(out_file.replace('.jpg','.txt'),to_print)
+    if plot_it:
+        util.writeFile(out_file.replace('.jpg','.txt'),to_print)
+    # else:
+    return np.array(classes)[arg_sort], average_diff[arg_sort]
+
 
 
 def looking_at_time_series():
@@ -304,7 +450,7 @@ def comparing_frequency_duration():
     #     core_aus.append(au_curr)
 
     # out_dir = '../experiments/comparing_frequency_all'
-    out_dir = '../experiments/comparing_frequency_duration_kunz_core'
+    out_dir = '../experiments/comparing_frequency_duration_kunz_core_newcolor'
     util.mkdir(out_dir)
     # type_feat = 'frequency'
 
@@ -313,52 +459,73 @@ def comparing_frequency_duration():
   
     pain_labels = [1,2,4,5,11,12]
     no_pain_labels = [6,9,8,10,7,3]
-    
-    # au_freq = au_dur
+    dur = False
+    if dur:
+        au_freq = au_dur
 
-    # for au_curr in core_aus:
-    #     au_freq_rn = np.array(au_freq[au_curr])
-    #     print au_freq_rn.size
-    #     xtick_labels = []
-    #     legend_entries = []
-    #     colors = ['b','r']
-    #     pain_vals = []
-    #     no_pain_vals = []
+    for au_curr in core_aus:
+        au_freq_rn = np.array(au_freq[au_curr])
+        print au_freq_rn.size
+        xtick_labels = []
+        legend_entries = []
+        # colors = ['b','r']
+        colors = ['#842a4b','#206159']
+        pain_vals = []
+        no_pain_vals = []
         
-    #     for idx_horse, pain_horse in enumerate(pain_labels):
-    #         str_curr = 'Horse '+str(idx_horse)
-    #         xtick_labels.append(str_curr)
+        for idx_horse, pain_horse in enumerate(pain_labels):
+            str_curr = str(idx_horse+1)
+            xtick_labels.append(str_curr)
             
-    #         au_freq_curr = au_freq_rn[au_freq_rn[:,0]==pain_horse,1]
-    #         if au_freq_curr.size<1:
-    #             au_freq_curr = 0
-    #         else:
-    #             print au_freq_curr
-    #             au_freq_curr = au_freq_curr[0]
-    #         pain_vals.append(au_freq_curr)
-    #         au_freq_curr = au_freq_rn[au_freq_rn[:,0]==no_pain_labels[idx_horse],1]
-    #         if au_freq_curr.size<1:
-    #             au_freq_curr = 0
-    #         else:
-    #             print au_freq_curr
-    #             au_freq_curr = au_freq_curr[0]
-    #         no_pain_vals.append(au_freq_curr)
-    #     print pain_vals, no_pain_vals
+            au_freq_curr = au_freq_rn[au_freq_rn[:,0]==pain_horse,1]
+            if au_freq_curr.size<1:
+                au_freq_curr = 0
+            else:
+                # print au_freq_curr
+                if dur:
+                    au_freq_curr = np.max(au_freq_curr)
+                else:
+                    au_freq_curr = au_freq_curr[0]
 
-    #     legend_vals = ['Pain','No Pain']
-    #     dict_vals = {'Pain':pain_vals,'No Pain':no_pain_vals}
+            pain_vals.append(au_freq_curr)
+            au_freq_curr = au_freq_rn[au_freq_rn[:,0]==no_pain_labels[idx_horse],1]
+            if au_freq_curr.size<1:
+                au_freq_curr = 0
+            else:
+                # print au_freq_curr
+                if dur:
+                    au_freq_curr = np.max(au_freq_curr)
+                else:
+                    au_freq_curr = au_freq_curr[0]
 
-    #     ylabel = 'Duration'
-    #     # title = 'count'.title()+' '+au_curr.upper()
-    #     title = 'Max Duration '+au_curr.upper()
-    #     out_file = os.path.join(out_dir, 'dur_'+au_curr+'_per_horse_hist.jpg')
-    #     # xtick_labels = all_aus
-    #     visualize.plotGroupBar(out_file ,dict_vals,xtick_labels,legend_vals,colors,xlabel='',ylabel = ylabel,title=title,width=0.4,ylim=None,loc=None)
-    #     # raw_input()
+            no_pain_vals.append(au_freq_curr)
+        
+        print au_curr
+        print 'pain_vals, no_pain_vals',pain_vals, no_pain_vals, len(pain_vals), len(no_pain_vals)
+        diff = np.array(pain_vals)-np.array(no_pain_vals)
+        print np.mean(diff), np.std(diff)
+
+        raw_input()
+        legend_vals = ['Pain','No Pain']
+        dict_vals = {'Pain':pain_vals,'No Pain':no_pain_vals}
+        if dur:
+            ylabel = 'Duration in Seconds'
+        else:
+            ylabel = 'Frequency'
+        # title = 'count'.title()+' '+au_curr.upper()
+        title = au_curr.upper()
+        # +' Maximum Duration'
+        if dur:
+            out_file = os.path.join(out_dir, 'dur_'+au_curr+'_per_horse_hist.jpg')
+        else:
+            out_file = os.path.join(out_dir, 'freq_'+au_curr+'_per_horse_hist.jpg')
+        # xtick_labels = all_aus
+        visualize.plotGroupBar(out_file ,dict_vals,xtick_labels,legend_vals,colors,xlabel='Horse ID',ylabel = ylabel,title=title,width=0.4,ylim=None,loc=-1)
+        # raw_input()
 
 
 
-    # return
+    return
 
     for type_feat,feat_dict in zip(['count','duration'],[au_freq,au_dur]):
         out_dir_curr = os.path.join(out_dir, type_feat)
@@ -610,10 +777,10 @@ def main():
     print 'hello cooc'
     # finding_temporal_structure()
     # time_series_analysis()
-    # comparing_frequency_duration()
+    comparing_frequency_duration()
     # print 'hello'
     # script_plot_cooc()
-    find_best_clusters()
+    # find_best_clusters()
     # looking_at_time_series()
 
 if __name__=='__main__':

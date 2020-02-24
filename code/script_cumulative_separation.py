@@ -1,7 +1,7 @@
 import sklearn
 from sklearn import preprocessing,decomposition,discriminant_analysis,pipeline,neighbors, metrics
 from helpers import util, visualize
-from read_in_data import read_start_stop_anno_file, clean_data, get_all_aus
+from read_in_data import read_start_stop_anno_file, clean_data, get_all_aus, read_clinical_file, read_caps_anno_file, read_in_data_stress
 import itertools
 import loo_classifying as lc
 import scipy
@@ -43,10 +43,87 @@ def plot_cumulative(out_file, features, labels, pain, file_str, separator):
     return k
 
 
-def get_feats(inc, step_size, flicker = 0,blink=0):
+def get_feats(inc, step_size, flicker = 0,blink=0, data_type = 'frequency',clinical = False, type_dataset = 'isch', split_pain = False, get_matches = False):
+    # print type_dataset
+    pain_isch = [1,2,4,5,11,12]
+    no_pain_isch = [3,6,7,8,9,10]
+    # pain_caps = [13,14,15,16,17,18]
 
-    file_name = '../data/FILM1-12Start_STOP_final_27.11.18.csv'
-    data_dict = read_start_stop_anno_file(file_name)
+    if clinical:
+        file_name = '../data/clinical_cases_compiled_10_23_2019.csv'
+        data_dict = read_clinical_file(file_name)
+        key_arr = list(data_dict.keys())
+        pain = None
+    else:    
+        # raise ValueError('not a valid feat type '+str(feat_type))
+        if type_dataset=='isch':
+            file_name = '../data/FILM1-12Start_STOP_final_27.11.18.csv'
+            data_dict = read_start_stop_anno_file(file_name)
+            key_arr = list(data_dict.keys())
+            pain = np.array(pain_isch)
+        elif type_dataset=='caps':
+            file_name = '../data/FILM1-12Start_STOP_final_27.11.18.csv'
+            data_dict = read_start_stop_anno_file(file_name)
+            caps_dict = read_caps_anno_file()
+            dict_big = {}
+            no_pain = np.array(no_pain_isch)
+            for k in no_pain:
+                dict_big[k] = data_dict[k]
+            
+            for k in caps_dict.keys():
+                dict_big[k] = caps_dict[k]
+
+            data_dict = dict_big
+            key_arr = list(data_dict.keys())
+            pain = np.array(caps_dict.keys())
+        elif type_dataset=='both':
+            file_name = '../data/FILM1-12Start_STOP_final_27.11.18.csv'
+            
+            data_dict = read_start_stop_anno_file(file_name)
+            caps_dict = read_caps_anno_file()
+            # print caps_dict.keys()
+            dict_big = {}
+            for dict_curr in [data_dict,caps_dict]:
+                for k in dict_curr:
+                    dict_big[k] = dict_curr[k]
+            data_dict = dict_big
+            
+            key_arr = list(data_dict.keys())
+            pain_caps = list(caps_dict.keys())
+            # print pain_caps
+            pain = np.array(pain_isch+pain_caps)
+            # print pain
+        elif type_dataset =='stress':
+            file_name = '../data/stress_all_anno.csv'
+            data_dict, pain, key_arr = read_in_data_stress(file_name, get_matches = get_matches)
+            if get_matches:
+                [pain, matches] = pain
+            pain = np.array(pain)
+            key_arr = np.array(key_arr)
+            if not split_pain:
+                pain = list(key_arr[pain>0])
+            # print pain
+            else:
+                pain = [key_arr[pain==0],key_arr[pain==1],key_arr[pain==2]]
+            # print pain
+            key_arr = list(key_arr)
+            # print pain
+            if get_matches:
+                pain = [pain, matches]
+
+            # print key_arr
+            # raw_input()
+        else:    
+            raise ValueError('not a valid feat type '+str(type_dataset))
+        # caps_dict = read_caps_anno_file()
+        # dict_big = {}
+        # for dict_curr in [data_dict,caps_dict]:
+        #     for k in dict_curr:
+        #         dict_big[k] = dict_curr[k]
+        # data_dict = dict_big
+        # key_arr = dict_big.keys()
+        
+    
     data_dict = clean_data(data_dict)
     if flicker>0:
         data_dict = create_flicker_category(data_dict, threshold = flicker)
@@ -55,19 +132,20 @@ def get_feats(inc, step_size, flicker = 0,blink=0):
         data_dict = create_flicker_category(data_dict, threshold = blink,au_names = ['ead101_ead104','au101'])
 
     all_aus_org = get_all_aus(data_dict)
-    key_arr = range(1,13)
-    pain = np.array([1,2,4,5,11,12])
+    
+    # pain = np.array([1,2,4,5,11,12])
 
     feat_keep = ['au','ad','ead']
-    data_type = 'frequency'
+    # data_type = 'frequency'
     # feat_keep = None
     file_str =[feat_keep]+[data_type, inc, step_size]
     features, labels, all_aus = get_start_stop_feat(data_dict, all_aus_org, key_arr, inc, data_type, feat_keep = feat_keep, step_size = step_size)
     # print all_aus
     # raw_input()
 
-
-    return features, labels, all_aus, file_str 
+    # print pain, key_arr
+    return features, labels, all_aus, pain 
+    # , matches
 
 def plot_pruned_num_cooc(features, labels, all_aus, core_aus, pain, k, out_file):
 

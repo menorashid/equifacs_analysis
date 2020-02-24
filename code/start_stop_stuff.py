@@ -33,9 +33,12 @@ def get_start_stop_feat(data_dict, all_aus, key_arr, inc, data_type, feat_keep =
 
         mat_curr = np.zeros((len(inc_pts)-1, len(all_aus)))
         num_keep = 0
+        
         for idx_inc, inc_start in enumerate(inc_pts[:-1]):
             inc_end = min(vid_length, inc_start+inc)
-            if (inc_end - inc_start)<inc:
+            # print inc_start, inc_end, num_keep, inc, inc_end - inc_start
+            if (inc_end - inc_start)<(inc-0.01):
+                # print 'breaking'
                 break
             num_keep +=1
             # print inc_start, inc_end
@@ -586,7 +589,7 @@ def knn(k_range , inc = 5 ):
         
         ####cut here####
         
-        precisions, recalls, f1s, to_print,_ = select_knn(data_dict,all_aus_org,key_arr,pain,inc,data_type,feat_keep,norm,log_reg_params,test_scheme,k_range,to_print = to_print)
+        precisions, recalls, f1s, to_print = select_knn(data_dict,all_aus_org,key_arr,pain,inc,data_type,feat_keep,norm,log_reg_params,test_scheme,k_range,to_print = to_print)
         
         # out_file_plot = out_file[:out_file.rindex('.')]+'.jpg'
         out_file_str = log_reg_str+[data_type]+feat_keep_str
@@ -1075,15 +1078,15 @@ def testing_clinical():
 
 
 def main():
-    inc = 5
-    step_size = 2.5
+    # inc = 5
+    # step_size = 2.5
 
-    plot_frquency_distribution(inc, step_size)
-    # script_plot_cooc()
-    # testing_clinical()    
-    # get_duration_stats()
+    # plot_frquency_distribution(inc, step_size)
+    # # script_plot_cooc()
+    # # testing_clinical()    
+    # # get_duration_stats()
 
-    return
+    # return
 
     inc_curr = [2,5,10,15,30]
     num_vids = 12
