@@ -10,6 +10,28 @@ def printable_au(au):
     return str_au
 
 
+def print_prob_table(to_rec_curr,ows):
+
+    # to_rec = [100*np.array(to_rec_curr).T for to_rec_curr in to_rec]
+    # print to_rec[0].shape
+
+    # for to_rec_curr in to_rec:
+    str_curr = ['AUs']+[str(val) for val in ows]
+    str_curr = ' & '.join(str_curr)+'\\\\'
+    print str_curr
+    for idx_r, r in enumerate(to_rec_curr):
+        str_curr = ['$\geq $'+str(idx_r)]+['%.2f'%val+"\\%"  for val in r]
+        str_curr = ' & '.join(str_curr)+'\\\\'
+        print str_curr
+    # print '___'
+
+def print_table_strs(arr):
+
+    for row in arr:
+        row = ' & '.join(row)+'\\\\'
+        print row
+
+
 def cooc_table(bin_keep_aus_all, all_aus_model, coefs = None): 
     bin_keep_aus_all = np.array(bin_keep_aus_all)
     # print bin_keep_aus_all.shape

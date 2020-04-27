@@ -206,7 +206,9 @@ def find_best_clusters_custom(features, labels, all_aus, pain,feat_keep =None,  
     # np.save( '../experiments/cooc_simple/classes.npy',np.array(classes))
     # print 'done saving'
 
-    cooc_diff = np.abs(cooc_diff_org) 
+    # cooc_diff = np.abs(cooc_diff_org) 
+    cooc_diff = np.array(cooc_diff_org)
+    cooc_diff[cooc_diff<0] = 0
     cooc_diff_sum = np.sum(cooc_diff,axis = 0)
     num_non_zero = np.sum(np.logical_or(cooc_norm_all[0]>0 , cooc_norm_all[1]>0).astype(int),axis = 0)
     num_non_zero[num_non_zero==0]=1

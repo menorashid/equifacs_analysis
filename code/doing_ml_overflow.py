@@ -433,7 +433,128 @@ def changing_cooc():
     # np.save('all_results_clinical_nohead.npy',results_fs)
 
 
+def frequency_analysis():
+    feature_selection = 'kunz'
+    selection_params = {}
+    selection_params['inc']=2
+    selection_params['step_size']=1
+    selection_params['feature_type']=['frequency']
+    # selection_params['thresh'] = 0.5
+    selection_params['type_dataset']='clinical'
+    ows = [[2,1],[5,2.5],[10,5],[15,7.5],[20,10],[30,30]]
+    partners = [(1,6),(2,9),(12,3),(4,8),(5,10),(11,7)]
+
+    
+    for eval_method in ['raw','majority']:
+        
+        print_rows = []
+        
+        
+        for idx_ows, ows_curr in enumerate(ows):
+            selection_params['inc']=ows_curr[0]
+            selection_params['step_size']=ows_curr[1]
+            features, labels, all_aus, class_pain, idx_test_all, bin_keep_aus = select_features(selection_type = feature_selection, selection_params = selection_params)    
+            
+            bin_keep = bin_keep_aus[0]
+            aus_curr = np.array(all_aus)[bin_keep]
+            features = features[:,bin_keep]
+            features[features>0] = 1
+            features_both = np.logical_or(features[:,0],features[:,1]).astype(int)
+            
+            preds = [features[:,0],features[:,1], np.logical_or(features[:,0],features[:,1]).astype(int),np.logical_and(features[:,0],features[:,1]).astype(int)]
+
+            # str_preds_all = list(aus_curr)+['either','both']
+            
+            if idx_ows==0:
+                title_row = ['OWS']+[au_curr.upper() for au_curr in aus_curr]+['Either','Both']
+                title_row = title_row+title_row[1:]
+                print_rows.append(title_row)
+
+            print_row = [[],[]]
+
+            for preds_in in preds:
+                gts_curr, preds_curr = get_labels_for_eval(class_pain, preds_in, labels, eval_method)
+                precision, recall, f1, _ = sklearn.metrics.precision_recall_fscore_support(gts_curr, preds_curr, average = 'binary')
+
+                
+                ppv = np.sum(np.logical_and(gts_curr==preds_curr,gts_curr==1))/float(np.sum(preds_curr==1))
+                npv = np.sum(np.logical_and(gts_curr==preds_curr,gts_curr==0))/float(np.sum(preds_curr==0))
+                print_row[0].append('%.2f'%(ppv*100)+'\%')
+                print_row[1].append('%.2f'%(npv*100)+'\%')
+
+                # sens = np.sum(np.logical_and(gts_curr==preds_curr,gts_curr==1))/float(np.sum(gts_curr==1))
+                # specs = np.sum(np.logical_and(gts_curr==preds_curr,gts_curr==0))/float(np.sum(gts_curr==0))
+                # print sens,specs
+                # print_row[0].append('%.2f'%(sens*100)+'\%')
+                # print_row[1].append('%.2f'%(specs*100)+'\%')
+                
+            
+            print_row = [str(ows_curr[0])]+print_row[0]+print_row[1]
+            print_rows.append(print_row)
+
+        print eval_method
+        pt.print_table_strs(print_rows)
+        print ' '
 
 
+            
+            
+
+def percentage_pain_au_segments():
+    feature_selection = 'kunz'
+    selection_params = {}
+    selection_params['inc']=2
+    selection_params['step_size']=1
+    selection_params['feature_type']=['frequency']
+    # selection_params['thresh'] = 0.5
+    selection_params['type_dataset']='isch'
+    ows = [[0.04,0.04],[2,1],[5,2.5],[10,5],[15,7.5],[20,10],[30,30]]
+    partners = [(1,6),(2,9),(12,3),(4,8),(5,10),(11,7)]
+
+    
+    all_aus_all = []
+    bin_keep_aus_all = []
+    p_values_all = []
+    probs = [[],[]]
+    for ows_curr in ows:
+        selection_params['inc']=ows_curr[0]
+        selection_params['step_size']=ows_curr[1]
+        features, labels, all_aus, class_pain, idx_test_all, bin_keep_aus = select_features(selection_type = feature_selection, selection_params = selection_params)    
+
+        bin_keep = bin_keep_aus[0]
+        num_aus = np.sum(bin_keep)
+        aus_curr = np.array(all_aus)[bin_keep]
+        # print aus_curr
+        # raw_input()
+        features = features[:,bin_keep]
+        features[features>0] = 1
+        fs = np.sum(features, axis = 1)
+        # print class_pain.shape, np.sum(class_pain)
+        # raw_input
+        for p_np in range(2):
+            features_rel = features[class_pain==p_np,:]
+            features_au17 = features_rel[:,3]
+            feature_sum = np.sum(features_rel, axis = 1)
+            # print p_np,features_rel.shape, feature_sum.size
+            prob_arr = []
+            for num_au in range(num_aus+1):
+                bin_num_au = feature_sum>=num_au
+                prob_arr.append(np.sum(bin_num_au)/float(feature_sum.size))
+                prob_arr[-1] = np.sum(features_au17[bin_num_au])/float(feature_sum.size)
+
+
+
+            probs[p_np].append(prob_arr)
+
+    # probs = np.array(probs)
+    # print probs
+    ows = [val[0] for val in ows]
+    print 'no pain',selection_params['type_dataset']
+    pt.print_prob_table(100*np.array(probs[0]).T,ows)
+    print ''
+    print ''
+    print 'pain',selection_params['type_dataset']
+    pt.print_prob_table(100*np.array(probs[1]).T,ows)
+        
 
 

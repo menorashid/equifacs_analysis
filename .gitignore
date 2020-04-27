@@ -26,6 +26,9 @@
 *.sql
 *.sqlite
 
+# Jupyter
+*.ipynb_checkpoints/
+
 # OS generated files #
 ######################
 .DS_Store
@@ -49,3 +52,21 @@ kinetics-i3d-master/data
 writing
 *.docx
 *.mat
+*.npy
+pytorch-deeplab-xception-master
+data
+experiments
+scratch
+TO DO
+OSVOS-PyTorch
+OSVOS-TensorFlow
+cocoapi
+models-master
+
+# Output
+output/
+
+# more
+Release-v1.2/
+*.xml
+*.npz

@@ -1,47 +1,33 @@
-to do right now:
-
-for 5, 2.5 plot frequency stats that look at number of occurrences not number of aus
-convert to a cumulative hist, and use a metric to consider the aus windows you will consider
-use the cutoff metric to look at number of pain aus co-occurring in the same window for pain and no pain
-
-repeat with different size observation windows
-
-do per horse co-occurrence analysis
-repeat with pruning?
-PUT EVERYTHING in paper
-revisit the intro. lift heavily from pia paper
+to do this 25:
+make fb event. invite people - done
+check vision8 and send out email. - done
+make tea - done
+decide on a playlist - done
 
 
-make cumulative graph - done
-return k for 50% no pain - done
-get time segments with that min number of occurrences - done
-look at how many pain features occur together in these segments - done
-also look at duration and frequency of pain aus 
-
-'ad38','au17','au101','ead101','au145','ead104','ad54','au24'
-
-'ad38','au47','au17','au101','ead101','au145','ead104','ad54','au24','au18','au10'
+add jane and lunch to calendar.
+all all events to calendar.
 
 
-Facial expression of pain has attracted attention as tool for assessment of pain in non-verbal human and now also in animals. In animals, protoypical expressions of pain are searched for in horses, using various purpose made observational scales of facial activities or grimaces, scored by direct observation or from images, making the results difficult to compare. The Facial Action Coding System is a fine-grained, objective and anatomy-based coding system developed for humans, but recently modified for use in horses as EquiFACS. Differentiation between 17 Action Units (AUs), 4 Ear Action Descriptors (EADs) can be done from video, inspected frame by frame. The aim of this study was to describe facial actions in horses with and without pain using EquiFACS. From a previous study, we had access to 30 s video recordings of six horses before and after induction of short term ischemic pain. Time of onset and offset of AUs and EADs were recorded in EquiFACS by a certified coder. To determine which facial actions were pain related, we pre-selected the actions that occurred with a frequency above 5\% and then analysed which of these actions that differed between pairs of pain and no-pain horses.
-Maheen…
-Results showed that …. which differs from. …More research is needed to establish the core component of the equine pain face.
+138G	chong-data
+592G	fanyix-data
+42G		haotian-data
+16K		krishna
+260G	krishna-data
+16K		lost+found
+684G	maheen-data
+213G	tyler-data
+4.0K	weixin_data
+1.2T	xiuye-data
+310G	xueyan-data
+436M	yangming-data
+2.9G	yhli-data
 
-Is There A Prototypical Facial Expression Of Pain In Horses?  An Equifacs Based Analysis Of Facial Expressions Of Horses Before And During Acute Experimental Ischemic Pain.
+to do today.
 
-Inner brow raiser (AU101), half blink (AU47), chin raiser (AU17),  ear rotator (AED104) and nostril dilator (AD38) were significantly associated to pain, while, of the 5 percent most frequent descriptors, blink (AU145) and ears forward (EAD101) 
+write up a good version of the draft.
+apply to places.
+go to exercise class.
 
-\begin{table}
-\centering
-\begin{tabular}{CCCC}
-EquiFACS & Percentage of total & More Frequent in & Description\\
-Code		& Pain video AUs & Pain Videos & \\
-AU17 & 6.18\% & \checkmark & Chin Raiser\\
-AU145 & 6.70\% & \xmark & Blink \\
-EAD101 & 7.47\% & \xmark & Ears Forward\\
-AD38 & 9.27\% & \checkmark & Nostril Dilator\\
-AU47 & 10.56\% & \checkmark & Half Blink\\
-AU101 & 11.34\% & \checkmark & Inner Brow Raiser\\
-EAD104 & 11.85\% & \checkmark & Ear Rotator\\
-\end{tabular}
-\end{table}
+check mail. - done
+maybe set up date with megan. - done

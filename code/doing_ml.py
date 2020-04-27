@@ -926,8 +926,10 @@ def stress_exp():
 
 
 def main():
-
-    changing_cooc()
+    # get_prob_frame_video()
+    # percentage_pain_au_segments()
+    frequency_analysis()
+    # changing_cooc()
     # stress_exp()
 
 

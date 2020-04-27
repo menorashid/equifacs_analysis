@@ -1,7 +1,7 @@
 import sklearn
 from sklearn import preprocessing,decomposition,discriminant_analysis,pipeline,neighbors, metrics
 from helpers import util, visualize
-from read_in_data import read_start_stop_anno_file, clean_data, get_all_aus, read_clinical_file, read_caps_anno_file, read_in_data_stress
+from read_in_data import read_start_stop_anno_file, clean_data, get_all_aus, read_clinical_file, read_caps_anno_file, read_in_data_stress, read_clinical_pain
 import itertools
 import loo_classifying as lc
 import scipy
@@ -61,6 +61,36 @@ def get_feats(inc, step_size, flicker = 0,blink=0, data_type = 'frequency',clini
             data_dict = read_start_stop_anno_file(file_name)
             key_arr = list(data_dict.keys())
             pain = np.array(pain_isch)
+        elif type_dataset =='clinical':
+            file_name = '../data/clinical_cases_compiled_10_23_2019.csv'
+            data_dict = read_clinical_file(file_name)
+            key_arr = list(data_dict.keys())
+            pain_dict = read_clinical_pain()
+            vid_labels = []
+            pain_list = []
+            for key,val in pain_dict.items():
+                vid_labels.append(key)
+                pain_list.append(val)
+            pain_list = np.array(pain_list)
+
+            vid_labels = np.array(vid_labels)
+            # print pain_list[vid_labels==25]
+            # print pain_list[vid_labels==7]            
+            # pain_list = pain_list/2.
+            # pain_list = np.mean(pain_list, axis = 1)
+            # pain_list[pain_list>=0.5] = 1
+            # pain_list[pain_list<0.5] = 0
+
+            pain_list[pain_list>1]=1
+            pain_list = np.sum(pain_list, axis = 1)
+            pain_list[pain_list<2] = 0
+            pain_list[pain_list>=2] = 1
+            
+            pain = vid_labels[pain_list>0]
+            # print pain
+            # raw_input()
+            
+
         elif type_dataset=='caps':
             file_name = '../data/FILM1-12Start_STOP_final_27.11.18.csv'
             data_dict = read_start_stop_anno_file(file_name)
