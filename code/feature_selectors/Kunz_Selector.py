@@ -1,10 +1,11 @@
 from .Base_Selector import *
 
 class Kunz_Selector(Base_Selector):
-    def __init__(self,inc=0, step_size=0, feature_type=None, pain=None, type_dataset = 'isch'):
+    def __init__(self,inc=0, step_size=0, feature_type=None, pain=None, type_dataset = 'isch', flicker = 0):
         # print type_dataset
         Base_Selector.__init__(self,inc, step_size, feature_type, pain, type_dataset = type_dataset)
         self.thresh = 0.05
+        self.flicker = flicker
 
 
     # def select(self, features, labels, all_aus):
@@ -45,7 +46,7 @@ class Kunz_Selector(Base_Selector):
         num_no_pain = np.sum(np.logical_not(bin_pain))
 
         print labels, bin_pain,num_pain, num_no_pain
-        raw_input()
+        # raw_input()
 
         pain_totals = np.sum(features_train[bin_pain,:],axis = 0)/float(num_pain)
         percentages = pain_totals/float(np.sum(pain_totals))
@@ -60,15 +61,15 @@ class Kunz_Selector(Base_Selector):
 
         
         if debug:
-            # manual_bin_keep = np.in1d(all_aus, ['au17','ad38'])
-            manual_bin_keep = np.in1d(all_aus, ['ad81'])
-            aus_keep_1st = manual_bin_keep
+            # manual_bin_keep = np.in1d(all_aus, ['au101','au5'])
+            # manual_bin_keep = np.in1d(all_aus, ['ad81'])
+            # aus_keep_1st = manual_bin_keep
             # manual_bin_keep = np.in1d(all_aus,['ad1','ad38','au101','au17','au47','ead104'])
             # ,'au10','au18','ad81'])
                 # ['ad38','au17','au47','ead104','au101','ad1'])
                 # ['ad38','ad81','au17','au18','au47','auh13','ead104'])
                 
-            classes_keep = np.array(all_aus)[manual_bin_keep]
+            # classes_keep = np.array(all_aus)[manual_bin_keep]
             # aus >thresh
             str_p = '\t'.join([val.upper() for val in np.array(all_aus)[aus_keep_1st]])
             print str_p
@@ -93,6 +94,7 @@ class Kunz_Selector(Base_Selector):
             # print str_p, num_pain, np.sum(pain_totals*num_pain)
             # str_p = '\t'.join(['%d'%(val*num_no_pain) for val in no_pain_totals[aus_keep_1st]])
             # print str_p,num_no_pain, np.sum(no_pain_totals*num_no_pain)
+            print classes_keep
             raw_input()
 
         for test_label in test_labels:
@@ -120,13 +122,13 @@ class Kunz_Selector(Base_Selector):
         return idx_test_all, classes_keep_all
 
     def select_and_split(self):
-        features, labels, all_aus, pain =get_feats(inc=30, step_size = 30, data_type = 'frequency', type_dataset = self.type_dataset)
+        features, labels, all_aus, pain =get_feats(inc=30, step_size = 30, data_type = 'frequency', type_dataset = self.type_dataset, flicker = self.flicker)
 
         # print features.shape
 
         
         idx_test, classes_keep_all = self.create_splits(features, labels, all_aus, pain = pain)
-        features, labels, all_aus, pain = self.get_feats_by_type(self.feature_type)
+        features, labels, all_aus, pain = self.get_feats_by_type(self.feature_type, flicker = self.flicker)
 
 
         all_aus_used = np.array([au.split('_')[0] for au in all_aus])
@@ -142,9 +144,9 @@ class Kunz_Selector(Base_Selector):
         
         idx_test, classes_keep_all = self.create_splits(features, labels, all_aus, no_test = True, pain = pain)
 
-        features, labels, all_aus, pain = self.get_feats_by_type(self.feature_type)
+        features, labels, all_aus, pain = self.get_feats_by_type(self.feature_type, flicker = self.flicker)
 
-        features_clinical, labels_clinical, all_aus_clinical, _ = self.get_feats_by_type(self.feature_type, clinical = True)
+        features_clinical, labels_clinical, all_aus_clinical, _ = self.get_feats_by_type(self.feature_type, clinical = True, flicker = self.flicker)
 
         
         all_aus_used = np.array([au.split('_')[0] for au in all_aus])

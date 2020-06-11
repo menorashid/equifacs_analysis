@@ -229,6 +229,7 @@ def find_best_clusters_custom(features, labels, all_aus, pain,feat_keep =None,  
     for cooc_curr in [cooc_diff_pos, cooc_diff_neg]:
         cooc_diff_sum_curr = np.sum(cooc_curr,axis = 0)
         cooc_percent = cooc_diff_sum_curr/cooc_diff_sum
+        # print (cooc_diff_sum_curr, cooc_diff_sum)
         cooc_percents.append(cooc_percent)
         # num_non_zero = np.sum(cooc_curr>0, axis = 0)
         # num_non_zero[num_non_zero==0]=1

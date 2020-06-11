@@ -11,12 +11,12 @@ class Base_Selector():
         # print type_dataset
         self.type_dataset = type_dataset
 
-    def get_feats_by_type(self, feature_type, clinical = False):
+    def get_feats_by_type(self, feature_type, clinical = False, flicker = 0):
         features_all = []
         aus_all = []
         labels_all = []
         for feature_type_curr in feature_type:
-            features, labels, all_aus, pain =get_feats(self.inc, self.step_size, data_type = feature_type_curr, clinical = clinical,type_dataset = self.type_dataset)
+            features, labels, all_aus, pain =get_feats(self.inc, self.step_size, data_type = feature_type_curr, clinical = clinical,type_dataset = self.type_dataset, flicker = flicker)
             if len(feature_type)>1:
                 features_all += [features]
                 labels_all += [labels]

@@ -1,7 +1,7 @@
 import sklearn
 from sklearn import preprocessing,decomposition,discriminant_analysis,pipeline,neighbors, metrics
 from helpers import util, visualize
-from read_in_data import read_start_stop_anno_file, clean_data, get_all_aus, read_clinical_file, read_caps_anno_file, read_in_data_stress, read_clinical_pain
+from read_in_data import read_start_stop_anno_file, clean_data, get_all_aus, read_clinical_file, read_caps_anno_file, read_in_data_stress, read_clinical_pain, read_in_data_stress_matches
 import itertools
 import loo_classifying as lc
 import scipy
@@ -72,8 +72,18 @@ def get_feats(inc, step_size, flicker = 0,blink=0, data_type = 'frequency',clini
                 vid_labels.append(key)
                 pain_list.append(val)
             pain_list = np.array(pain_list)
+            
 
+            # print pain_list
+            # pain_list[pain_list>1]=1
+            # npain = np.sum(pain_list==0,axis = 1)
+            # p = np.sum(pain_list==1,axis = 1)
+            # for idx in range(len(p)):
+            #     print '%d\t%d'%(npain[idx],p[idx])
+            
+            # raw_input()
             vid_labels = np.array(vid_labels)
+            # print vid_labels
             # print pain_list[vid_labels==25]
             # print pain_list[vid_labels==7]            
             # pain_list = pain_list/2.
@@ -81,12 +91,32 @@ def get_feats(inc, step_size, flicker = 0,blink=0, data_type = 'frequency',clini
             # pain_list[pain_list>=0.5] = 1
             # pain_list[pain_list<0.5] = 0
 
+            # print pain_list
             pain_list[pain_list>1]=1
             pain_list = np.sum(pain_list, axis = 1)
+
             pain_list[pain_list<2] = 0
             pain_list[pain_list>=2] = 1
-            
             pain = vid_labels[pain_list>0]
+            
+            # remove_list = pain_list==1
+            # pain_list[pain_list<2] = 0
+            # pain_list[pain_list>=2] = 1
+            # remove_list = vid_labels[remove_list]
+            # pain = vid_labels[pain_list>0]
+            # data_dict_new = {}
+            # for k in data_dict.keys():
+            #     if k not in remove_list:
+            #         data_dict_new[k]=data_dict[k]
+            # data_dict = data_dict_new
+            # key_arr = list(data_dict.keys())
+
+            # print vid_labels
+            # print list(data_dict.keys())
+            # print list(data_dict_new.keys())
+            # print remove_list
+            # print pain
+
             # print pain
             # raw_input()
             
@@ -124,15 +154,19 @@ def get_feats(inc, step_size, flicker = 0,blink=0, data_type = 'frequency',clini
             pain = np.array(pain_isch+pain_caps)
             # print pain
         elif type_dataset =='stress':
-            file_name = '../data/stress_all_anno.csv'
-            data_dict, pain, key_arr = read_in_data_stress(file_name, get_matches = get_matches)
+            # file_name = '../data/stress_all_anno.csv'
+            file_name = '../data/johan_stress_4_26_comma.csv'
+            if get_matches == True:
+                data_dict, pain, key_arr = read_in_data_stress_matches(file_name)
+            else:
+                data_dict, pain, key_arr = read_in_data_stress(file_name, type_dataset)
             if get_matches:
                 [pain, matches] = pain
             pain = np.array(pain)
             key_arr = np.array(key_arr)
             if not split_pain:
                 pain = list(key_arr[pain>0])
-            # print pain
+                # print pain
             else:
                 pain = [key_arr[pain==0],key_arr[pain==1],key_arr[pain==2]]
             # print pain
@@ -141,8 +175,17 @@ def get_feats(inc, step_size, flicker = 0,blink=0, data_type = 'frequency',clini
             if get_matches:
                 pain = [pain, matches]
 
-            # print key_arr
+            # print len(key_arr)
+            # print len(pain)
             # raw_input()
+        elif type_dataset.startswith('stress'):
+            # file_name = '../data/stress_all_anno.csv'
+            file_name = '../data/johan_stress_4_26_comma.csv'
+            data_dict, pain, key_arr = read_in_data_stress(file_name, stress_type = type_dataset.split('_')[1])
+            pain = np.array(pain)
+            key_arr = np.array(key_arr)
+            pain = list(key_arr[pain>0])
+            key_arr = list(key_arr)
         else:    
             raise ValueError('not a valid feat type '+str(type_dataset))
         # caps_dict = read_caps_anno_file()
@@ -470,7 +513,7 @@ def create_flicker_category(data_dict, threshold = 1.0, au_names = ['ead104','ea
             starts.append(np.min(times[pair,0]))
             ends.append(np.max(times[pair,1]))
             durations.append(ends[-1] - starts[-1])
-            aus.append('_'.join(au_names))
+            aus.append('+'.join(au_names))
             bin_remove[pair]=1
         
         bin_keep = np.logical_not(bin_remove)
@@ -523,6 +566,11 @@ def finding_flicker_length():
 
 
 def main():
+
+    get_feats(30,30, flicker = 0,blink=0, data_type = 'frequency',clinical = False, type_dataset = 'clinical')
+
+
+    return
     # file_name = '../data/FILM1-12Start_STOP_final_27.11.18.csv'
     # data_dict = read_start_stop_anno_file(file_name)
     # data_dict = clean_data(data_dict)

@@ -97,8 +97,13 @@ def clean_data(data_dict, remove_lr = True):
         strs_exclude = ['lip','uncodable','uppe','nan','scratching']
 
         for idx_au, au in enumerate(au_list):
-            
-            au = au.lower().split()[0].strip()
+            # print idx_au, au
+            # print 'au',idx_au, k, au, all_other_lists[0][idx_au], all_other_lists[1][idx_au]
+            try:
+                au = au.lower().split()[0].strip()
+            except:
+                print 'au',idx_au, k, au, all_other_lists[0][idx_au], all_other_lists[1][idx_au]
+                raw_input()
             
             problem = False
             for str_exclude in strs_exclude:
@@ -313,18 +318,49 @@ def read_caps_anno_file():
 
 
     # 
-        
+def read_in_data_stress(file_name, stress_type):
+    
+    data_dict, stress_anno, file_codes = read_in_data_stress_rough(file_name, stress_type)
 
-def read_in_data_stress(file_name, get_matches = False):
-    if get_matches:
-        return read_in_data_stress_matches(file_name)
+    if stress_type == 'si':
+        codes_to_keep = [0, 7, 18, 15, 8, 12, 19, 6, 4, 17, 3, 9, 14, 2, 16, 10, 13, 5, 11, 1]
+    elif stress_type == 'tr':
+        codes_to_keep = [20, 21, 26, 59, 42, 65, 0, 54, 18, 60, 8, 62, 19, 55, 4, 56, 3, 63, 14, 64, 16, 57, 13, 61, 11, 58, 30, 23, 22, 35, 25, 29, 27, 24, 37, 31, 53, 28, 52, 49, 32, 34, 40, 39, 36, 33, 41, 46, 48, 47, 45, 43, 44, 38, 50, 51]
+    else:
+        return data_dict, stress_anno, file_codes
+    
+    codes_to_keep = np.array(codes_to_keep)
+
+    data_dict_new = {}
+    for k in codes_to_keep:
+        data_dict_new[k] = data_dict[k]
+
+    bin_keep = np.in1d(file_codes, codes_to_keep)
+    stress_anno = list(np.array(stress_anno)[bin_keep])
+    file_codes = list(np.array(file_codes)[bin_keep])
+
+
+
+    return data_dict, stress_anno, file_codes
+
+def read_in_data_stress_rough(file_name, stress_type):
+    # get_matches = False):
+    # if get_matches:
+    #     return read_in_data_stress_matches(file_name)
 
     df = pd.read_csv(file_name,header = None)
     arr = df.values
+    
     arr = arr[1:,:]
+
     file_names = np.unique(arr[:,7])
     
-    stress_strs = ['Baseline','Social isolation','Transportation']
+    if stress_type == 'si':
+        stress_strs = ['Baseline', 'Social isolation']
+    elif stress_type == 'tr':
+        stress_strs = ['Baseline', 'Transportation']
+    else:
+        stress_strs = ['Baseline', 'Social isolation','Transportation']
     stressers_needed = np.array(['Baseline'])
 
     # stress_strs = ['Baseline','Social isolation']
@@ -365,8 +401,18 @@ def read_in_data_stress(file_name, get_matches = False):
     stress_anno = []
     file_codes = []
     data_dict = {}
-    selected_ints = [0, 0, 0, 0, 0, 2, 1, 2, 1, 1, 2, 1, 1, 0, 0, 1, 1, 1, 2, 1, 1, 0, 1, 1, 0, 1, 2, 1, 2, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 0, 0, 2, 0, 1, 2, 2, 0, 1, 2, 0, 1, 0, 0, 2, 1, 1, 1, 1, 0, 0, 0, 1, 0, 2, 0, 0, 2, 0, 0, 0, 0, 1, 0, 2, 2, 2, 2, 2, 0, 1]
-    file_names_index = ['KV 1.eaf', 'KV 10.eaf', 'KV 11.eaf', 'KV 12.eaf', 'KV 13.eaf', 'KV 14.eaf', 'KV 15.eaf', 'KV 16.eaf', 'KV 17.eaf', 'KV 18.eaf', 'KV 19.eaf', 'KV 2.eaf', 'KV 20.eaf', 'KV 21.eaf', 'KV 22.eaf', 'KV 23.eaf', 'KV 24.eaf', 'KV 25.eaf', 'KV 26.eaf', 'KV 27.eaf', 'KV 28.eaf', 'KV 29.eaf', 'KV 3.eaf', 'KV 30.eaf', 'KV 4.eaf', 'KV 5.eaf', 'KV 6.eaf', 'KV 7.eaf', 'KV 8.eaf', 'KV 9.eaf', 'Media 1.eaf', 'Media 10.eaf', 'Media 16.eaf', 'Media 17.eaf', 'Media 18.eaf', 'Media 2.eaf', 'Media 20.eaf', 'Media 21.eaf', 'Media 22.eaf', 'Media 24.eaf', 'Media 25.eaf', 'Media 27.eaf', 'Media 28.eaf', 'Media 29.eaf', 'Media 30.eaf', 'Media 31.eaf', 'Media 32.eaf', 'Media 33.eaf', 'Media 34.eaf', 'Media 35.eaf', 'Media 36.eaf', 'Media 37.eaf', 'Media 38.eaf', 'Media 39.eaf', 'Media 4.eaf', 'Media 40.eaf', 'Media 41.eaf', 'Media 42.eaf', 'Media 43.eaf', 'Media 44.eaf', 'Media 47.eaf', 'Media 48.eaf', 'Media 49.eaf', 'Media 5.eaf', 'Media 50.eaf', 'Media 53.eaf', 'Media 54.eaf', 'Media 55.eaf', 'Media 56.eaf', 'Media 57.eaf', 'Media 58.eaf', 'Media 59.eaf', 'Media 6.eaf', 'Media 60.eaf', 'Media 61.eaf', 'Media 62.eaf', 'Media 63.eaf', 'Media 64.eaf', 'Media 8.eaf', 'Media 9.eaf']
+    # selected_ints = [0, 0, 0, 0, 0, 2, 1, 2, 1, 1, 2, 1, 1, 0, 0, 1, 1, 1, 2, 1, 1, 0, 1, 1, 0, 1, 2, 1, 2, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 0, 0, 2, 0, 1, 2, 2, 0, 1, 2, 0, 1, 0, 0, 2, 1, 1, 1, 1, 0, 0, 0, 1, 0, 2, 0, 0, 2, 0, 0, 0, 0, 1, 0, 2, 2, 2, 2, 2, 0, 1]
+    # file_names_index = ['KV 1.eaf', 'KV 10.eaf', 'KV 11.eaf', 'KV 12.eaf', 'KV 13.eaf', 'KV 14.eaf', 'KV 15.eaf', 'KV 16.eaf', 'KV 17.eaf', 'KV 18.eaf', 'KV 19.eaf', 'KV 2.eaf', 'KV 20.eaf', 'KV 21.eaf', 'KV 22.eaf', 'KV 23.eaf', 'KV 24.eaf', 'KV 25.eaf', 'KV 26.eaf', 'KV 27.eaf', 'KV 28.eaf', 'KV 29.eaf', 'KV 3.eaf', 'KV 30.eaf', 'KV 4.eaf', 'KV 5.eaf', 'KV 6.eaf', 'KV 7.eaf', 'KV 8.eaf', 'KV 9.eaf', 'Media 1.eaf', 'Media 10.eaf', 'Media 16.eaf', 'Media 17.eaf', 'Media 18.eaf', 'Media 2.eaf', 'Media 20.eaf', 'Media 21.eaf', 'Media 22.eaf', 'Media 24.eaf', 'Media 25.eaf', 'Media 27.eaf', 'Media 28.eaf', 'Media 29.eaf', 'Media 30.eaf', 'Media 31.eaf', 'Media 32.eaf', 'Media 33.eaf', 'Media 34.eaf', 'Media 35.eaf', 'Media 36.eaf', 'Media 37.eaf', 'Media 38.eaf', 'Media 39.eaf', 'Media 4.eaf', 'Media 40.eaf', 'Media 41.eaf', 'Media 42.eaf', 'Media 43.eaf', 'Media 44.eaf', 'Media 47.eaf', 'Media 48.eaf', 'Media 49.eaf', 'Media 5.eaf', 'Media 50.eaf', 'Media 53.eaf', 'Media 54.eaf', 'Media 55.eaf', 'Media 56.eaf', 'Media 57.eaf', 'Media 58.eaf', 'Media 59.eaf', 'Media 6.eaf', 'Media 60.eaf', 'Media 61.eaf', 'Media 62.eaf', 'Media 63.eaf', 'Media 64.eaf', 'Media 8.eaf', 'Media 9.eaf']
+
+    selected_ints = [1, 0, 1, 2, 2, 1, 1, 0, 1, 0, 0, 1, 0, 2, 2, 1, 0, 1, 2, 1, 0, 0, 0, 2, 2, 0, 2, 1, 1, 0, 2, 0, 2, 1, 0, 0, 2, 1, 0, 1, 0, 1, 2, 0, 2, 1, 2, 1, 0, 0, 2, 1, 0, 2, 2, 1, 2, 1, 1, 0, 0, 2, 1, 2, 0, 2]
+    # []
+
+
+    file_names_index = ['KV 1.eaf', 'KV 10.eaf', 'KV 12.eaf', 'KV 13.eaf', 'KV 15.eaf', 'KV 18.eaf', 'KV 2.eaf', 'KV 20.eaf', 'KV 21.eaf', 'KV 22.eaf', 'KV 23.eaf', 'KV 25.eaf', 'KV 27.eaf', 'KV 3.eaf', 'KV 30.eaf', 'KV 4.eaf', 'KV 5.eaf', 'KV 7.eaf', 'KV 8.eaf', 'KV 9.eaf', 'Media 1.eaf', 'Media 10.eaf', 'Media 13.eaf', 'Media 15.eaf', 'Media 16.eaf', 'Media 18.eaf', 'Media 2.eaf', 'Media 20.eaf', 'Media 21.eaf', 'Media 22.eaf', 'Media 23.eaf', 'Media 25.eaf', 'Media 27.eaf', 'Media 28.eaf', 'Media 29.eaf', 'Media 3.eaf', 'Media 30.eaf', 'Media 33.eaf', 'Media 35.eaf', 'Media 36.eaf', 'Media 37.eaf', 'Media 39.eaf', 'Media 4.eaf', 'Media 41.eaf', 'Media 42.eaf', 'Media 44.eaf', 'Media 47.eaf', 'Media 48.eaf', 'Media 49.eaf', 'Media 50.eaf', 'Media 51.eaf', 'Media 52.eaf', 'Media 53.eaf', 'Media 54.eaf', 'Media 55.eaf', 'Media 56.eaf', 'Media 57.eaf', 'Media 58.eaf', 'Media 59.eaf', 'Media 6.eaf', 'Media 60.eaf', 'Media 61.eaf', 'Media 62.eaf', 'Media 63.eaf', 'Media 64.eaf', 'Media 8.eaf']
+
+    # []
+    
+
 
     # print list(file_names)
     # raw_input()
@@ -382,9 +428,14 @@ def read_in_data_stress(file_name, get_matches = False):
         
         # rand_int = np.random.randint(len(annotators))
         # selected_ints.append(rand_int)
+        # file_names_index.append(file_name)
+
+
+        # print (file_name, len(annotators))
+
         # for annotator in annotators:
-        idx_file_name = file_names_index.index(file_name)
-        rand_int = selected_ints[idx_file_name]
+        file_code = file_names_index.index(file_name)
+        rand_int = selected_ints[file_code]
 
         bin_keep = rel_anno[:,8]==annotators[rand_int]
         rel_anno = rel_anno[bin_keep,:]
@@ -398,12 +449,12 @@ def read_in_data_stress(file_name, get_matches = False):
 
         assert stress_type.size ==1
         if stress_type not in stress_strs:
-            # print stress_type
+            # print 'new type', stress_type
         # =='Post-induction':
             continue
         else:
             # print rel_anno[0,0],rel_anno[0,1]
-            file_code = len(stress_anno)
+            # file_code = len(stress_anno)
             file_codes.append(file_code)
             stress_anno.append(stress_strs.index(stress_type))
             matches.append([int(horse_id),int(file_code),int(stress_strs.index(stress_type))])
@@ -434,6 +485,11 @@ def read_in_data_stress(file_name, get_matches = False):
         #     print np.min(start_time_list), np.max(end_time_list)
         data_dict[file_code] = [aus, duration, start_time_list, end_time_list]
         
+    
+    # assert len(file_names_index)==len(selected_ints)
+    # print '['+', '.join([str(val) for val in selected_ints])+']'
+    # print '['+"', '".join(file_names_index)+']'
+    # return None, None, None
     data_dict = clean_data(data_dict)
 
     # print selected_ints
@@ -442,6 +498,9 @@ def read_in_data_stress(file_name, get_matches = False):
     # print len(file_codes)
     # raw_input()
     return data_dict, stress_anno, file_codes
+
+
+
 
 
 def read_in_data_stress_matches(file_name):
@@ -491,8 +550,14 @@ def read_in_data_stress_matches(file_name):
     stress_anno = []
     file_codes = []
     data_dict = {}
-    selected_ints = [0, 0, 0, 0, 0, 2, 1, 2, 1, 1, 2, 1, 1, 0, 0, 1, 1, 1, 2, 1, 1, 0, 1, 1, 0, 1, 2, 1, 2, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 0, 0, 2, 0, 1, 2, 2, 0, 1, 2, 0, 1, 0, 0, 2, 1, 1, 1, 1, 0, 0, 0, 1, 0, 2, 0, 0, 2, 0, 0, 0, 0, 1, 0, 2, 2, 2, 2, 2, 0, 1]
-    file_names_index = ['KV 1.eaf', 'KV 10.eaf', 'KV 11.eaf', 'KV 12.eaf', 'KV 13.eaf', 'KV 14.eaf', 'KV 15.eaf', 'KV 16.eaf', 'KV 17.eaf', 'KV 18.eaf', 'KV 19.eaf', 'KV 2.eaf', 'KV 20.eaf', 'KV 21.eaf', 'KV 22.eaf', 'KV 23.eaf', 'KV 24.eaf', 'KV 25.eaf', 'KV 26.eaf', 'KV 27.eaf', 'KV 28.eaf', 'KV 29.eaf', 'KV 3.eaf', 'KV 30.eaf', 'KV 4.eaf', 'KV 5.eaf', 'KV 6.eaf', 'KV 7.eaf', 'KV 8.eaf', 'KV 9.eaf', 'Media 1.eaf', 'Media 10.eaf', 'Media 16.eaf', 'Media 17.eaf', 'Media 18.eaf', 'Media 2.eaf', 'Media 20.eaf', 'Media 21.eaf', 'Media 22.eaf', 'Media 24.eaf', 'Media 25.eaf', 'Media 27.eaf', 'Media 28.eaf', 'Media 29.eaf', 'Media 30.eaf', 'Media 31.eaf', 'Media 32.eaf', 'Media 33.eaf', 'Media 34.eaf', 'Media 35.eaf', 'Media 36.eaf', 'Media 37.eaf', 'Media 38.eaf', 'Media 39.eaf', 'Media 4.eaf', 'Media 40.eaf', 'Media 41.eaf', 'Media 42.eaf', 'Media 43.eaf', 'Media 44.eaf', 'Media 47.eaf', 'Media 48.eaf', 'Media 49.eaf', 'Media 5.eaf', 'Media 50.eaf', 'Media 53.eaf', 'Media 54.eaf', 'Media 55.eaf', 'Media 56.eaf', 'Media 57.eaf', 'Media 58.eaf', 'Media 59.eaf', 'Media 6.eaf', 'Media 60.eaf', 'Media 61.eaf', 'Media 62.eaf', 'Media 63.eaf', 'Media 64.eaf', 'Media 8.eaf', 'Media 9.eaf']
+    # selected_ints = [0, 0, 0, 0, 0, 2, 1, 2, 1, 1, 2, 1, 1, 0, 0, 1, 1, 1, 2, 1, 1, 0, 1, 1, 0, 1, 2, 1, 2, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 0, 0, 2, 0, 1, 2, 2, 0, 1, 2, 0, 1, 0, 0, 2, 1, 1, 1, 1, 0, 0, 0, 1, 0, 2, 0, 0, 2, 0, 0, 0, 0, 1, 0, 2, 2, 2, 2, 2, 0, 1]
+    # file_names_index = ['KV 1.eaf', 'KV 10.eaf', 'KV 11.eaf', 'KV 12.eaf', 'KV 13.eaf', 'KV 14.eaf', 'KV 15.eaf', 'KV 16.eaf', 'KV 17.eaf', 'KV 18.eaf', 'KV 19.eaf', 'KV 2.eaf', 'KV 20.eaf', 'KV 21.eaf', 'KV 22.eaf', 'KV 23.eaf', 'KV 24.eaf', 'KV 25.eaf', 'KV 26.eaf', 'KV 27.eaf', 'KV 28.eaf', 'KV 29.eaf', 'KV 3.eaf', 'KV 30.eaf', 'KV 4.eaf', 'KV 5.eaf', 'KV 6.eaf', 'KV 7.eaf', 'KV 8.eaf', 'KV 9.eaf', 'Media 1.eaf', 'Media 10.eaf', 'Media 16.eaf', 'Media 17.eaf', 'Media 18.eaf', 'Media 2.eaf', 'Media 20.eaf', 'Media 21.eaf', 'Media 22.eaf', 'Media 24.eaf', 'Media 25.eaf', 'Media 27.eaf', 'Media 28.eaf', 'Media 29.eaf', 'Media 30.eaf', 'Media 31.eaf', 'Media 32.eaf', 'Media 33.eaf', 'Media 34.eaf', 'Media 35.eaf', 'Media 36.eaf', 'Media 37.eaf', 'Media 38.eaf', 'Media 39.eaf', 'Media 4.eaf', 'Media 40.eaf', 'Media 41.eaf', 'Media 42.eaf', 'Media 43.eaf', 'Media 44.eaf', 'Media 47.eaf', 'Media 48.eaf', 'Media 49.eaf', 'Media 5.eaf', 'Media 50.eaf', 'Media 53.eaf', 'Media 54.eaf', 'Media 55.eaf', 'Media 56.eaf', 'Media 57.eaf', 'Media 58.eaf', 'Media 59.eaf', 'Media 6.eaf', 'Media 60.eaf', 'Media 61.eaf', 'Media 62.eaf', 'Media 63.eaf', 'Media 64.eaf', 'Media 8.eaf', 'Media 9.eaf']
+
+    selected_ints = [1, 0, 1, 2, 2, 1, 1, 0, 1, 0, 0, 1, 0, 2, 2, 1, 0, 1, 2, 1, 0, 0, 0, 2, 2, 0, 2, 1, 1, 0, 2, 0, 2, 1, 0, 0, 2, 1, 0, 1, 0, 1, 2, 0, 2, 1, 2, 1, 0, 0, 2, 1, 0, 2, 2, 1, 2, 1, 1, 0, 0, 2, 1, 2, 0, 2]
+    # []
+
+
+    file_names_index = ['KV 1.eaf', 'KV 10.eaf', 'KV 12.eaf', 'KV 13.eaf', 'KV 15.eaf', 'KV 18.eaf', 'KV 2.eaf', 'KV 20.eaf', 'KV 21.eaf', 'KV 22.eaf', 'KV 23.eaf', 'KV 25.eaf', 'KV 27.eaf', 'KV 3.eaf', 'KV 30.eaf', 'KV 4.eaf', 'KV 5.eaf', 'KV 7.eaf', 'KV 8.eaf', 'KV 9.eaf', 'Media 1.eaf', 'Media 10.eaf', 'Media 13.eaf', 'Media 15.eaf', 'Media 16.eaf', 'Media 18.eaf', 'Media 2.eaf', 'Media 20.eaf', 'Media 21.eaf', 'Media 22.eaf', 'Media 23.eaf', 'Media 25.eaf', 'Media 27.eaf', 'Media 28.eaf', 'Media 29.eaf', 'Media 3.eaf', 'Media 30.eaf', 'Media 33.eaf', 'Media 35.eaf', 'Media 36.eaf', 'Media 37.eaf', 'Media 39.eaf', 'Media 4.eaf', 'Media 41.eaf', 'Media 42.eaf', 'Media 44.eaf', 'Media 47.eaf', 'Media 48.eaf', 'Media 49.eaf', 'Media 50.eaf', 'Media 51.eaf', 'Media 52.eaf', 'Media 53.eaf', 'Media 54.eaf', 'Media 55.eaf', 'Media 56.eaf', 'Media 57.eaf', 'Media 58.eaf', 'Media 59.eaf', 'Media 6.eaf', 'Media 60.eaf', 'Media 61.eaf', 'Media 62.eaf', 'Media 63.eaf', 'Media 64.eaf', 'Media 8.eaf']
 
     # print list(file_names)
     # raw_input()
@@ -505,7 +570,7 @@ def read_in_data_stress_matches(file_name):
         horse_id = np.unique(rel_anno[:,0])[0]
 
         annotators = np.unique(rel_anno[:,8])
-        
+        # print (annotators)
         # rand_int = np.random.randint(len(annotators))
         # selected_ints.append(rand_int)
         for annotator in annotators:
@@ -547,8 +612,21 @@ def read_in_data_stress_matches(file_name):
 
             # film_name = int(rel_anno[0][0].strip().split()[1])
             aus = rel_anno[:,6]
-            aus = [str(val) for val in aus.tolist()]
+            # if file_code==
+            for au in aus.tolist():
+                au = str(au)
+                
+                au_check = au.lower().split()[0].strip()
+                # print 'rin',au_check
+                # if len(au.lower().split())==0:
+                #     print 'PROBLEM', au, horse_id, annotator, file_name
+                #     raw_input()
 
+            # print aus
+            # raw_input()
+            # print rel_anno
+            aus = [str(val) for val in aus.tolist()]
+            
             time_lists = [rel_anno[:,2],rel_anno[:,3],rel_anno[:,4]]
             new_lists = []
             
@@ -596,7 +674,46 @@ def main():
     # read_clinical_file(file_name)
     # read_clinical_pain()
     # file_name)
-    data_dict_caps = read_caps_anno_file()
+    # data_dict_caps = read_caps_anno_file()
+
+
+
+    # lines = util.readLinesFromFile('../data/johan_stress_4_26.csv')
+    # lines = [line.replace(';',',').replace('Media 54 .eaf','Media 54.eaf').replace('L VC75', 'VC75 L')  for line in lines]
+    # # lines = [line.replace(';',',') for line in lines]
+    # util.writeFile('../data/johan_stress_4_26_comma.csv', lines)
+
+    # return
+    data_dict, stress_anno, file_codes = read_in_data_stress('../data/johan_stress_4_26_comma.csv')
+    print len(data_dict.keys())
+    [pain, matches] = stress_anno
+    matches = np.array(matches)
+
+    # bl_match = []
+    tr_match =[]
+    si_match = []
+    for horse in np.unique(matches[:,0]):
+        rel_rows = matches[matches[:,0]==horse,:]
+        bl = rel_rows[rel_rows[:,2]==0,1][0]
+
+        si = rel_rows[rel_rows[:,2]==1,1]
+        tr = rel_rows[rel_rows[:,2]==2,1]
+        if len(si)>0:
+            si_match.append((bl,si[0]))
+        if len(tr)>0:
+            tr_match.append((bl, tr[0]))
+
+    print (si_match)
+    print (tr_match)
+
+
+    # print np.array(matches).shape
+    # print (matches)
+    # [int(horse_id),int(file_code),int(stress_strs.index(stress_type))]
+    # print pain
+    # print np.array(pain).shape
+    # print stress_anno
+    # print file_codes
 
 
 

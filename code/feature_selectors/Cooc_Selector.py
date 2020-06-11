@@ -1,10 +1,11 @@
 from .Base_Selector import *
 
 class Cooc_Selector(Base_Selector):
-    def __init__(self, inc=0, step_size=0, feature_type=None, pain=None, thresh=None, type_dataset = 'isch'):
+    def __init__(self, inc=0, step_size=0, feature_type=None, pain=None, thresh=None, type_dataset = 'isch', flicker = 0):
         # print type_dataset
         Base_Selector.__init__(self,inc, step_size, feature_type, pain,type_dataset = type_dataset)
         self.thresh = thresh
+        self.flicker = flicker
 
     def create_splits( self, features, labels, all_aus, pain=None, thresh=None, no_test = False):
         
@@ -15,6 +16,7 @@ class Cooc_Selector(Base_Selector):
         if thresh is None:
             thresh = self.thresh
 
+        # print thresh
         idx_test_all = []
         classes_keep_all = []
         if no_test:
@@ -32,20 +34,30 @@ class Cooc_Selector(Base_Selector):
         # print classes_keep
         # raw_input()
         
-
+        
         # START OLD METHOD
         classes, diffs, percents = cooc.find_best_clusters_custom(features, labels, all_aus, pain, plot_it = False)
-        
+        # print diffs
+        # min_diff = np.min(diffs[diffs>0])
+        # print min_diff
+        # raw_input()
         diffs = diffs - np.min(diffs)
         diffs = diffs/np.max(diffs)
-        # thresh = 0.5
+        # thresh = float(np.max(diffs)*self.thresh)
+        # print classes[diffs>thresh]
+        # print diffs[diffs>thresh]
+
+        # diffs = diffs/np.sum(diffs)
+        # diffs = np.cumsum(diffs[::-1])[::-1]
+        # print diffs
+
         if type(thresh)==float:
             classes_keep = classes[diffs>thresh]
             percents = [percent[diffs>thresh] for percent in percents]
         else:
             idx = np.argsort(diffs)[::-1]
             classes_keep = classes[idx[:thresh]]
-        print classes_keep
+        # print classes_keep
         # for idx,class_keep in enumerate(classes_keep):
         #     print classes_keep[idx],percents[0][idx],percents[1][idx],(percents[0]-percents[1])[idx]
         # print classes_keep
@@ -73,19 +85,18 @@ class Cooc_Selector(Base_Selector):
             classes_keep_all.append(classes_keep)
             # print classes_keep_all
 
-            
+        # print ('classes_keep',classes_keep)
         return idx_test_all, classes_keep_all
 
     def select_and_split(self):
-        features, labels, all_aus,pain = self.get_feats_by_type(['frequency'])
+        features, labels, all_aus,pain = self.get_feats_by_type(['frequency'], flicker = self.flicker)
 
         idx_test, classes_keep_all = self.create_splits(features, labels, all_aus, pain = pain)
         
 
-        features, labels, all_aus, pain = self.get_feats_by_type(self.feature_type)
+        features, labels, all_aus, pain = self.get_feats_by_type(self.feature_type, flicker = self.flicker)
 
-        all_aus_used = np.array([au.split('_')[0] for au in all_aus])
-        
+        all_aus_used = np.array([au.split('_')[0] for au in all_aus ])
         idx_test_all, bin_keep_aus = self.convert_vals_to_bins( all_aus_used, classes_keep_all, idx_test, labels)
         # print np.array(all_aus)[bin_keep_aus[0]]
         # print classes_keep_all
@@ -93,11 +104,11 @@ class Cooc_Selector(Base_Selector):
         return features, labels, all_aus, class_pain, idx_test_all, bin_keep_aus
 
     def select_exp_clinical(self):
-        features, labels, all_aus, pain = self.get_feats_by_type(['frequency'])
+        features, labels, all_aus, pain = self.get_feats_by_type(['frequency'], flicker = self.flicker)
 
         idx_test, classes_keep_all = self.create_splits(features, labels, all_aus, pain = pain, no_test = True)
-        features, labels, all_aus, pain = self.get_feats_by_type(self.feature_type)  
-        features_clinical, labels_clinical, all_aus_clinical,_ = self.get_feats_by_type(self.feature_type, clinical = True)
+        features, labels, all_aus, pain = self.get_feats_by_type(self.feature_type, flicker = self.flicker)
+        features_clinical, labels_clinical, all_aus_clinical,_ = self.get_feats_by_type(self.feature_type, clinical = True, flicker = self.flicker)
 
         all_aus_used = np.array([au.split('_')[0] for au in all_aus])
         all_aus_used_clinical = np.array([au.split('_')[0] for au in all_aus_clinical])

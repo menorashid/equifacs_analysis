@@ -97,12 +97,13 @@ def script_loo(out_dir_meta, ows, feature_types,  feature_selection = None, sele
                 precision, recall, f1, _ = sklearn.metrics.precision_recall_fscore_support(gt, pred, average = 'binary')
                 accuracy = np.sum(gt ==pred)/float(gt.size)
                 # print to_print[idx],eval_method, precision, recall, f1
-                # print ' '.join(['%.2f'%val for val in [precision, recall, f1]])
+                print feature_type
+                print '\n'.join(['%.2f'%(val*100) for val in [precision, recall, accuracy]])
                 row_idx = row_labels.index(ows_curr)
                 # print row_idx, row_labels, ows_curr
                 col_idx = col_labels.index(feature_type)
                 # print col_idx, col_labels, feature_type
-                table_curr[row_idx, col_idx] = f1
+                table_curr[row_idx, col_idx] = accuracy
                 # raw_input()
     # print table_curr
     table_curr = table_curr*100
@@ -215,29 +216,55 @@ def test_clinical_loo(out_dir_meta, ows, feature_types,  feature_selection = Non
 
 def get_p_values(features, labels, partners, class_pain):
     from scipy import stats
-    idx_p = []
-    idx_np = []
-    for h1,h2 in partners:
-        idx_p+=list(np.where(labels==h1)[0])
-        idx_np+=list(np.where(labels==h2)[0])
+    if partners is None:
+        assert class_pain is not None
+        idx_p = np.where(class_pain==1)[0]
+        idx_np = np.where(class_pain==0)[0]
+        pvalues= []
+        for feature_idx in range(features.shape[1]):
+            pvalue = stats.ttest_ind(features[idx_p,feature_idx],features[idx_np,feature_idx]).pvalue
+            pvalues.append(pvalue)
 
-    idx_p= np.array(idx_p)
-    idx_np = np.array(idx_np)
-    assert idx_p.size == idx_np.size
-    
-    if class_pain is not None:
-        assert np.unique(class_pain[idx_p])==np.array([1])
-        assert np.unique(class_pain[idx_np])==np.array([0])
+    else:
+        idx_p = []
+        idx_np = []
+        for h1,h2 in partners:
+            idx_p+=list(np.where(labels==h1)[0])
+            idx_np+=list(np.where(labels==h2)[0])
 
-    pvalues= []
-    for feature_idx in range(features.shape[1]):
-        pvalue = stats.ttest_rel(features[idx_p,feature_idx],features[idx_np,feature_idx]).pvalue
-        pvalues.append(pvalue)
+        idx_p= np.array(idx_p)
+        idx_np = np.array(idx_np)
+        assert idx_p.size == idx_np.size
+        
+        if class_pain is not None:
+            assert np.unique(class_pain[idx_p])==np.array([1])
+            assert np.unique(class_pain[idx_np])==np.array([0])
+
+        pvalues= []
+        for feature_idx in range(features.shape[1]):
+            pvalue = stats.ttest_rel(features[idx_p,feature_idx],features[idx_np,feature_idx]).pvalue
+            pvalues.append(pvalue)
 
     return np.array(pvalues)
 
 
 def changing_cooc():
+
+    delim = ' & '
+    mark = '\\checkmark'
+    less_than  = '$<$'
+    endline = '\\\\'
+    hline = '\\hline'
+    before_ows = '\\multirow{3}{1}{'
+    aft_ows = '} & 0.3'
+
+    # delim = ','
+    # mark = 'x'
+    # less_than  = '<'
+    # endline = ''
+    # hline = ''
+
+
     feature_selection = 'cooc'
     selection_params = {}
     selection_params['inc']=2
@@ -245,8 +272,50 @@ def changing_cooc():
     selection_params['feature_type']=['frequency']
     selection_params['thresh'] = 0.5
     selection_params['type_dataset']='isch'
+    # selection_params['flicker']=1
+
+
+    feature_selection = 'kunz'
+    selection_params = {}
+    selection_params['inc']=2
+    selection_params['step_size']=1
+    selection_params['feature_type']=['frequency']
+    # selection_params['thresh'] = 0.5
+    selection_params['type_dataset']='clinical'
+    # selection_params['type_dataset']='stress_tr'
+    # selection_params['flicker']=1
+
+    # fs = {}
+    # feature_selection = 'collapse'
+    # selection_params = dict(select_mode='cooc',flicker=1,brow=0, thresh = 0.5, type_dataset = 'stress_tr', keep_rest = True)
+    # selection_params['inc']=2
+    # selection_params['step_size']=1
+    # selection_params['feature_type']=['frequency']
+    
+    # feature_selection = fs
+    # fs_list.append(fs)
+
+
+
+
+    # 'isch'
     ows = [[2,1],[5,2.5],[10,5],[15,7.5],[20,10],[30,30]]
-    partners = [(1,6),(2,9),(12,3),(4,8),(5,10),(11,7)]
+    out_file = '../experiments/johan_'+selection_params['type_dataset']+'_'+feature_selection+'.csv'
+    # [[30,30]]
+    if selection_params['type_dataset']=='stress_si':
+        partners = [(0, 7), (18, 15), (8, 12), (19, 6), (4, 17), (3, 9), (14, 2), (16, 10), (13, 5), (11, 1)]
+        partners = [(b,a) for a,b in partners]
+
+    elif selection_params['type_dataset']=='stress_tr':
+        partners = [(20, 21), (26, 59), (42, 65), (0, 54), (18, 60), (8, 62), (19, 55), (4, 56), (3, 63), (14, 64), (16, 57), (13, 61), (11, 58), (30, 23), (22, 35), (25, 29), (27, 24), (37, 31), (53, 28), (52, 49), (32, 34), (40, 39), (36, 33), (41, 46), (48, 47), (45, 43), (44, 38), (50, 51)]
+        partners = [(b,a) for a,b in partners]
+    elif selection_params['type_dataset']=='stress':
+        partners = [(0, 7), (18, 15), (8, 12), (19, 6), (4, 17), (3, 9), (14, 2), (16, 10), (13, 5), (11, 1)]+[(20, 21), (26, 59), (42, 65), (0, 54), (18, 60), (8, 62), (19, 55), (4, 56), (3, 63), (14, 64), (16, 57), (13, 61), (11, 58), (30, 23), (22, 35), (25, 29), (27, 24), (37, 31), (53, 28), (52, 49), (32, 34), (40, 39), (36, 33), (41, 46), (48, 47), (45, 43), (44, 38), (50, 51)]
+        partners = [(b,a) for a,b in partners]
+    elif selection_params['type_dataset']=='clinical':
+        partners = None
+    else:
+        partners = [(1,6),(2,9),(12,3),(4,8),(5,10),(11,7)]
 
     
     all_aus_all = []
@@ -261,9 +330,14 @@ def changing_cooc():
         # print features[:3]
         # print features.shape, np.sum(bin_keep_aus[0])
         # print np.sum(features, axis = 0)
-
+        # if partners is None:
+        #     p_values = np.ones((features.shape[1],))
+        # else:
         p_values = get_p_values(features, labels, partners, class_pain)
+        # print p_values.shape, features.shape
+        # raw_input()
         p_values_all.append(p_values)
+        # print ('look',len(bin_keep_aus))
         bin_keep_aus_all.append(bin_keep_aus[0])
         all_aus_all.append(np.array(all_aus))
 
@@ -271,11 +345,19 @@ def changing_cooc():
         assert np.all(all_aus_all[0]==all_au)
 
     bin_keep_aus_all = np.array(bin_keep_aus_all)
-    print bin_keep_aus_all.shape
+    
+    # aus_print = ['ad38','au145','au101','auh13','au47','ead104','ead101','ad81','au17','ad29','au18','au24']
+    # arg_sort = np.array([list(all_aus_all[0]).index(val) for val in aus_print])
+    # print arg_sort
+    # return
+    # print bin_keep_aus_all.shape
     sum_aus = np.sum(bin_keep_aus_all, axis = 0)
+    max_print = np.max(np.sum(bin_keep_aus_all,axis = 1))
     arg_sort = np.argsort(sum_aus)[::-1]
-    arg_sort = arg_sort[:12] 
-    print sum_aus[arg_sort]
+    arg_sort = arg_sort[:max_print] 
+    print (arg_sort)
+    arg_sort = np.array([20, 14, 4, 7, 11, 0, 13, 9, 8, 17, 5, 15, 16, 3, 12])
+    # print sum_aus[arg_sort]
 
     p_values_print = np.zeros((bin_keep_aus_all.shape[0],arg_sort.size))
     # for idx_col in arg_sort:
@@ -286,39 +368,77 @@ def changing_cooc():
             bin_keep_rel = bin_keep_aus_all[idx_row][idx_au]
             if bin_keep_rel:
                 p_values_print[idx_row, idx_col] = p_value_rel
+    
+
 
     rows_to_print = []
     row_curr = [' ']+[str_curr.upper() for str_curr in all_aus_all[0][arg_sort]]
-    rows_to_print.append(' & '.join(row_curr))
+    rows_to_print.append(delim.join(row_curr)+endline+hline)
     for idx_row, p_value_row in enumerate(p_values_print):
-        row_curr = [' ']
-        row_cm = ['\multirow{2}{1}{$'+str(ows[idx_row][0])+'$}']
+        row_curr = [' ',' ']
+        row_cm = [before_ows+str(ows[idx_row][0])+aft_ows]
         for p_value in p_value_row:
             # print p_value
             if p_value ==0:
                 row_cm.append(' ')
             else:
-                row_cm.append('\checkmark')
+                row_cm.append(mark)
 
             if p_value ==0:
                 row_curr.append(' ')
             elif p_value <0.001:
-                row_curr.append('(p<0.001)')
+                row_curr.append('(p'+less_than+'0.001)')
             elif p_value<0.01:
-                row_curr.append('(p<0.01)')
+                row_curr.append('(p'+less_than+'0.01)')
             elif p_value<0.05:
-                row_curr.append('(p<0.05)')
+                row_curr.append('(p'+less_than+'0.05)')
             else:
                 # row_curr.append('\\mr{'+'%.2f'%p_value+'}')
-                row_curr.append('(p=%.2f'%p_value+')')
+                row_curr.append('(p=%.3f'%p_value+')')
 
-        str_row = ' & '.join(row_cm)+'\\\\'
+        str_row = delim.join(row_cm)+endline
         rows_to_print.append(str_row)
-        str_row = ' & '.join(row_curr)+'\\\\\\hline'
-        rows_to_print.append(str_row)
+        # str_row = delim.join(row_curr)+endline+hline
+        # rows_to_print.append(str_row)
 
+    
+    util.writeFile(out_file, rows_to_print)
     for row_to_print in rows_to_print:
         print row_to_print
+
+
+    # rows_to_print = []
+    # row_curr = [' ']+[str_curr.upper() for str_curr in all_aus_all[0][arg_sort]]
+    # rows_to_print.append(' & '.join(row_curr))
+    # for idx_row, p_value_row in enumerate(p_values_print):
+    #     row_curr = [' ']
+    #     row_cm = ['\multirow{2}{1}{$'+str(ows[idx_row][0])+'$}']
+    #     for p_value in p_value_row:
+    #         # print p_value
+    #         if p_value ==0:
+    #             row_cm.append(' ')
+    #         else:
+    #             row_cm.append('\checkmark')
+
+    #         if p_value ==0:
+    #             row_curr.append(' ')
+    #         elif p_value <0.001:
+    #             row_curr.append('(p<0.001)')
+    #         elif p_value<0.01:
+    #             row_curr.append('(p<0.01)')
+    #         elif p_value<0.05:
+    #             row_curr.append('(p<0.05)')
+    #         else:
+    #             # row_curr.append('\\mr{'+'%.2f'%p_value+'}')
+    #             row_curr.append('(p=%.2f'%p_value+')')
+
+    #     str_row = ' & '.join(row_cm)+'\\\\'
+    #     rows_to_print.append(str_row)
+    #     str_row = ' & '.join(row_curr)+'\\\\\\hline'
+    #     rows_to_print.append(str_row)
+
+    # for row_to_print in rows_to_print:
+    #     print row_to_print
         # +'\\\\\\hline'
 
 

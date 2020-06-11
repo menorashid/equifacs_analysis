@@ -1,5 +1,5 @@
 import sklearn
-from sklearn import preprocessing,decomposition,discriminant_analysis,pipeline
+from sklearn import preprocessing,decomposition,discriminant_analysis,pipeline, model_selection, metrics
 from helpers import util, visualize
 from read_in_data import *
 
@@ -201,7 +201,16 @@ def fit_model(all_counts, class_pain, norm, model_type,model_params = None, ):
     elif model_type =='radius_nn':
         lda = sklearn.neighbors.RadiusNeighborsClassifier(**model_params)
     elif model_type == 'svm':
-        lda = sklearn.svm.SVC(**model_params)
+        # print 'HOLA ladies!!!'
+        # print model_params
+        param_grid = model_params
+        # print param_grid
+        search = sklearn.model_selection.GridSearchCV(sklearn.svm.SVC(), param_grid, scoring = sklearn.metrics.make_scorer(sklearn.metrics.fbeta_score, beta = 1))
+        # print search.estimator
+        search = search.fit(data_lda, class_pain)
+        lda =  search.best_estimator_
+        # print lda
+        # lda = sklearn.svm.SVC(**model_params)
     elif model_type =='logreg':
         lda = sklearn.linear_model.LogisticRegression(**model_params)
         # sklearn.svm.SVC(**model_params)
