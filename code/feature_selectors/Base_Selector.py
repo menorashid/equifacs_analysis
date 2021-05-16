@@ -49,6 +49,7 @@ class Base_Selector():
             # idx_test = labels == test_label
             idx_test_all.append(test_label)
             classes_keep_all.append(np.array(all_aus))
+            print (all_aus.shape)
             
             if no_test:
                 idx_test_all = [None]

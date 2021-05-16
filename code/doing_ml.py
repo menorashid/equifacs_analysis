@@ -762,7 +762,7 @@ def process_all_results(out_file):
 
     
 def stress_exp():
-    # from scipy import stats
+    from scipy import stats
     # data_type = 'frequency'
     # step_size = 30
     # inc = 30
@@ -771,11 +771,11 @@ def stress_exp():
 
     # for stress_t in [1,2]:
     #     for data_type in ['frequency','max_duration']:
-    #         features, labels, all_aus, [pain, matches] = get_feats(inc, step_size, data_type = data_type, type_dataset = type_dataset, flicker = 2, get_matches = True, split_pain = True)
+    #         features, labels, all_aus, [pain, matches] = get_feats(inc, step_size, data_type = data_type, type_dataset = type_dataset, flicker = 1, get_matches = True, split_pain = True)
 
             
-    #         aus_kunz = np.array(['ad1','ad38','au101','au145','au47','au5','ead101','ead104','ad19', 'au25', 'auh13'])
-    #         # aus_kunz = np.array(['ead101+ead104'])
+    #         # aus_kunz = np.array(['ad1','ad38','au101','au145','au47','au5','ead101','ead104','ad19', 'au25', 'auh13'])
+    #         aus_kunz = np.array(['ead101+ead104'])
     #         cols_keep = np.in1d(all_aus,aus_kunz)
     #         aus_keep = np.array(all_aus)[cols_keep]
     #         features_keep = features[:,cols_keep]
@@ -809,60 +809,74 @@ def stress_exp():
     #             print str_p
 
     # return
-    # print 'hello'
-    # data_type = 'frequency'
-    # step_size = 30
-    # inc = 30
-    # type_dataset = 'stress_tr'
-    # # aus_kunz = np.array(['ead101_ead104'])
-    # # aus_kunz = np.array(['ad1','ad38','au101','au145','au47','au5','ead101','ead104','ad19', 'au25', 'auh13'])
+    print 'hello'
+    data_type = 'frequency'
+    step_size = 30
+    inc = 30
+    type_dataset = 'stress_tr'
+    # aus_kunz = np.array(['ead101_ead104'])
+    aus_kunz = np.array(['ad1','ad38','au101','au145','au47','au5','ead101','ead104','ad19', 'au25', 'auh13'])
+    flicker = 0
     # aus_kunz = np.array(['ead101+ead104'])
-    # # aus_kunz = np.array(['ad1','ad38','au101','au145','au47','au5','ead101','ead104'])
-    # # aus_kunz = np.array(['ad19','ad81','au16', 'au25'])
+    # flicker = 1
+    # aus_kunz = np.array(['ad1','ad38','au101','au145','au47','au5','ead101','ead104'])
+    # aus_kunz = np.array(['ad19','ad81','au16', 'au25'])
 
-    # bins = []
-    # features_list = [[],[],[],[],[],[]]
-    # for idx_d, type_dataset in enumerate([ 'stress_tr','stress_si']):
-    #     features, labels, all_aus, pain = get_feats(inc, step_size, data_type = data_type, type_dataset = type_dataset, flicker = 1)
+    bins = []
+    features_list = [[],[],[],[],[],[]]
+    for idx_d, type_dataset in enumerate([ 'stress_tr','stress_si']):
+        features, labels, all_aus, pain = get_feats(inc, step_size, data_type = data_type, type_dataset = type_dataset, flicker = flicker)
 
-    #     cols_keep = np.in1d(all_aus,aus_kunz)
-    #     aus_keep = np.array(all_aus)[cols_keep]
-    #     # features_keep = features[:,cols_keep]
+        cols_keep = np.in1d(all_aus,aus_kunz)
+        aus_keep = np.array(all_aus)[cols_keep]
+        # features_keep = features[:,cols_keep]
 
-    #     features_dur, labels_dur, all_aus_dur, _ = get_feats(inc, step_size, data_type = 'max_duration', type_dataset = type_dataset, flicker = 1)
-    #     # features_dur_keep = features[:,cols_keep]
-    #     aus_keep_dur = np.array(all_aus_dur)[cols_keep]
-    #     assert np.all(aus_keep==aus_keep_dur)
-    #     assert np.all(labels_dur==labels)
+        features_dur, labels_dur, all_aus_dur, _ = get_feats(inc, step_size, data_type = 'max_duration', type_dataset = type_dataset, flicker = flicker)
+        # features_dur_keep = features[:,cols_keep]
+        aus_keep_dur = np.array(all_aus_dur)[cols_keep]
+        assert np.all(aus_keep==aus_keep_dur)
+        assert np.all(labels_dur==labels)
 
-    #     bin_pain = np.in1d(labels, pain)
-    #     bin_bl = np.logical_not(bin_pain)
+        bin_pain = np.in1d(labels, pain)
+        bin_bl = np.logical_not(bin_pain)
         
-    #     for idx_f, feat in enumerate([features, features_dur]):
-    #         feat = feat[:,cols_keep]
-    #         feat_p = feat[bin_pain,:]
-    #         feat_bl = feat[bin_bl,:]
-    #         idx_list = idx_d*2+idx_f
-    #         idx_bl = len(features_list)-2+idx_f
-    #         # print type_dataset, idx_f, idx_list, idx_bl
-    #         features_list[idx_list]= feat_p
-    #         features_list[idx_bl].append(feat_bl)
+        for idx_f, feat in enumerate([features, features_dur]):
+            feat = feat[:,cols_keep]
+            feat_p = feat[bin_pain,:]
+            feat_bl = feat[bin_bl,:]
+            idx_list = idx_d*2+idx_f
+            idx_bl = len(features_list)-2+idx_f
+            print type_dataset, idx_f
+            for col_idx in range(feat_p.shape[1]):
+                print aus_keep[col_idx],',',
+                pvalue = stats.ttest_rel(feat_bl[:,col_idx], feat_p[:,col_idx]).pvalue
+                if pvalue<0.001:
+                    print '<0.001'
+                else:
+                    print '%.3f'%pvalue
+
+            features_list[idx_list]= feat_p
+            features_list[idx_bl].append(feat_bl)
+            raw_input()
     
-    # features_list[-2] = np.concatenate(features_list[-2], axis = 0)
-    # features_list[-1] = np.concatenate(features_list[-1], axis = 0)
+    features_list[-2] = np.concatenate(features_list[-2], axis = 0)
+    features_list[-1] = np.concatenate(features_list[-1], axis = 0)
 
-    # str_p = '\t'.join([val.upper() for val in aus_keep])
-    # print str_p
-    # str_type = ['Transportation Frequency','Transportation Duration','Social Isolation Frequency',
-    #             'Social Isolation Duration', 'Baseline Frequency','Baseline Duration']
-    # for idx_f in [0,2,4,1,3,5]:
-    #     # print f.shape
-    #     f = features_list[idx_f]
-    #     vals = np.mean(f,axis = 0)
-    #     str_p = '\t'.join([str_type[idx_f]]+['%.3f'%val for val in vals])
-    #     print str_p
+    str_p = ','.join([val.upper() for val in aus_keep])
+    print str_p
+    str_type = ['Transportation Frequency','Transportation Duration','Social Isolation Frequency',
+                'Social Isolation Duration', 'Baseline Frequency','Baseline Duration']
+    for idx_f in [0,2,4,1,3,5]:
+        # print f.shape
+        f = features_list[idx_f]
+        vals = np.mean(f,axis = 0)
+        std_dev = np.std(f, axis = 0)
+        std_err = std_dev/np.sqrt(f.shape[0])
+        # print std_dev,f.shape[0],np.sqrt(f.shape[0]),std_err
+        str_p = ','.join([str_type[idx_f]]+['%.3f'%val for val in vals])
+        print str_p
 
-    # return
+    return
 
     # results_fs = []
     # for fs, fs_name in zip(fs_list, fs_list_names):
@@ -872,7 +886,7 @@ def stress_exp():
     type_dataset = 'stress'        
     feature_selection = 'kunz'
     ows = [[30,30]]
-    selection_params = dict(type_dataset=type_dataset)
+    selection_params = dict(type_dataset=type_dataset,flicker = 1)
     # ,flicker =1)
     feature_types = [['frequency'],['max_duration'],['frequency','max_duration']]
     eval_methods = ['majority']
@@ -912,11 +926,11 @@ def main():
     # get_prob_frame_video()
     # percentage_pain_au_segments()
     # frequency_analysis()
-    changing_cooc()
-    # import warnings
-    # warnings.filterwarnings("ignore")
+    # changing_cooc()
+    import warnings
+    warnings.filterwarnings("ignore")
     # , category=DeprecationWarning)
-    # stress_exp()
+    stress_exp()
 
 
 

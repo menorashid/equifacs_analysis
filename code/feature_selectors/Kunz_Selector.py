@@ -23,7 +23,7 @@ class Kunz_Selector(Base_Selector):
         # print 'kunz',pain, self.type_dataset
         # raw_input()
 
-        debug = True
+        debug = False
         
         if pain is None:
             pain = self.pain
@@ -45,7 +45,7 @@ class Kunz_Selector(Base_Selector):
         num_pain = np.sum(bin_pain)
         num_no_pain = np.sum(np.logical_not(bin_pain))
 
-        print labels, bin_pain,num_pain, num_no_pain
+        # print labels, bin_pain,num_pain, num_no_pain
         # raw_input()
 
         pain_totals = np.sum(features_train[bin_pain,:],axis = 0)/float(num_pain)
@@ -56,7 +56,11 @@ class Kunz_Selector(Base_Selector):
         percentages_no_pain = no_pain_totals/float(np.sum(no_pain_totals))
 
         aus_keep_2nd = np.logical_and(aus_keep_1st, pain_totals>no_pain_totals)
-        classes_keep = np.array(all_aus)[aus_keep_2nd]
+        classes_keep = np.array(all_aus)
+        # [aus_keep_2nd]
+        # print (len(all_aus), classes_keep.shape)
+        print (classes_keep)
+        # raw_input()
         # print classes_keep
 
         
@@ -94,7 +98,7 @@ class Kunz_Selector(Base_Selector):
             # print str_p, num_pain, np.sum(pain_totals*num_pain)
             # str_p = '\t'.join(['%d'%(val*num_no_pain) for val in no_pain_totals[aus_keep_1st]])
             # print str_p,num_no_pain, np.sum(no_pain_totals*num_no_pain)
-            print classes_keep
+            # print classes_keep
             raw_input()
 
         for test_label in test_labels:
